@@ -2,7 +2,7 @@ package wire
 
 import (
 	"fmt"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"strings"
 )
 
@@ -14,10 +14,10 @@ type Menu struct {
 
 type Menus []Menu
 
-func (ms Menus) ToDbMenus() []*db.Menu {
-	menus := make([]*db.Menu, len(ms))
+func (ms Menus) ToDbMenus() []*openbardb.Menu {
+	menus := make([]*openbardb.Menu, len(ms))
 	for i := range ms {
-		menus[i] = &db.Menu{
+		menus[i] = &openbardb.Menu{
 			Name:        ms[i].Name,
 			Ingredients: ms[i].Ingredients,
 			RecipeIds:   ms[i].RecipeIds,
@@ -38,7 +38,7 @@ func (ms Menus) Validate() error {
 	return nil
 }
 
-func FromDbMenus(menus []*db.Menu) Menus {
+func FromDbMenus(menus []*openbardb.Menu) Menus {
 	ms := make(Menus, len(menus))
 	for i := range menus {
 		ms[i] = Menu{

@@ -1,10 +1,10 @@
-package db
+package openbardb
 
 import "context"
 
 func (s *testSuite) TestPumps() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, OpenBarDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	n, err := CountPumpRows(ctx, tx)

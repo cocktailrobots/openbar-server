@@ -1,4 +1,4 @@
-package db
+package cocktailsdb
 
 import (
 	"context"
@@ -25,7 +25,7 @@ func (s *testSuite) TestCocktails() {
 
 func (s *testSuite) testGetAllCocktails() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	cocktails, err := GetCocktails(ctx, tx)
@@ -35,7 +35,7 @@ func (s *testSuite) testGetAllCocktails() {
 
 func (s *testSuite) testGetCocktailsWithNames() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	cocktails, err := GetCocktailsWithNames(ctx, tx, "noexist")
@@ -71,7 +71,7 @@ func (s *testSuite) testCreateCocktail() {
 		},
 	}
 
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	err = AddCocktails(ctx, tx, cocktails...)
@@ -80,7 +80,7 @@ func (s *testSuite) testCreateCocktail() {
 	err = tx.Commit()
 	s.Require().NoError(err)
 
-	tx, err = s.BeginTx(ctx, CocktailsDB)
+	tx, err = s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	retrieved, err := GetCocktailsWithNames(ctx, tx, "cocktail1", "cocktail2")
@@ -103,7 +103,7 @@ func (s *testSuite) testCocktailUniqueness() {
 		},
 	}
 
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	err = AddCocktails(ctx, tx, cocktails...)
@@ -180,7 +180,7 @@ func (s *testSuite) testDeleteCocktail() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			ctx := context.Background()
-			tx, err := s.BeginTx(ctx, CocktailsDB)
+			tx, err := s.BeginTx(ctx)
 			s.Require().NoError(err)
 
 			cocktails, err := GetCocktails(ctx, tx)
@@ -204,7 +204,7 @@ func (s *testSuite) testDeleteCocktail() {
 
 func (s *testSuite) testUpdateCocktail() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	cocktails, err := GetCocktailsWithNames(ctx, tx, "boulevardier")

@@ -2,7 +2,7 @@ package wire
 
 import (
 	"fmt"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/cocktailsdb"
 	"strings"
 )
 
@@ -20,11 +20,11 @@ type Cocktail struct {
 // Cocktails is a slice of cocktails.
 type Cocktails []Cocktail
 
-// ToDbCocktails converts a list of Cocktails to a list of db.Cocktails.
-func (c Cocktails) ToDbCocktails() []db.Cocktail {
-	cocktails := make([]db.Cocktail, len(c))
+// ToDbCocktails converts a list of Cocktails to a list of cocktailsdb.Cocktails.
+func (c Cocktails) ToDbCocktails() []cocktailsdb.Cocktail {
+	cocktails := make([]cocktailsdb.Cocktail, len(c))
 	for i := range c {
-		cocktails[i] = db.Cocktail{
+		cocktails[i] = cocktailsdb.Cocktail{
 			Name:        c[i].Name,
 			DisplayName: c[i].DisplayName,
 			Description: c[i].Description,
@@ -50,8 +50,8 @@ func (c Cocktails) Validate() error {
 	return nil
 }
 
-// FromDbCocktails converts a list of db.Cocktails to a list of Cocktails.
-func FromDbCocktails(cocktails []db.Cocktail) Cocktails {
+// FromDbCocktails converts a list of cocktailsdb.Cocktails to a list of Cocktails.
+func FromDbCocktails(cocktails []cocktailsdb.Cocktail) Cocktails {
 	c := make(Cocktails, len(cocktails))
 	for i := range cocktails {
 		c[i] = Cocktail{

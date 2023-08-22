@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/apis"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"github.com/gocraft/dbr/v2"
 	"net/http"
 )
@@ -28,7 +28,7 @@ func (api *OpenBarAPI) getConfig(ctx context.Context, w http.ResponseWriter, r *
 	var cfg wire.Config
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
 		var err error
-		cfg, err = db.GetConfig(ctx, tx)
+		cfg, err = openbardb.GetConfig(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("failed to get config from db: %w", err)
 		}
@@ -49,7 +49,7 @@ func (api *OpenBarAPI) setConfig(ctx context.Context, w http.ResponseWriter, r *
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
 		var err error
-		err = db.SetConfig(ctx, tx, reqCfg)
+		err = openbardb.SetConfig(ctx, tx, reqCfg)
 		if err != nil {
 			return fmt.Errorf("failed to set config in db: %w", err)
 		}
@@ -87,7 +87,7 @@ func (api *OpenBarAPI) getConfigValue(ctx context.Context, w http.ResponseWriter
 
 	var value string
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		cfg, err := db.GetConfig(ctx, tx)
+		cfg, err := openbardb.GetConfig(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("failed to get config from db: %w", err)
 		}
@@ -131,7 +131,7 @@ func (api *OpenBarAPI) updateConfigValue(ctx context.Context, w http.ResponseWri
 	}
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
-		cfg, err := db.GetConfig(ctx, tx)
+		cfg, err := openbardb.GetConfig(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("failed to get config from db: %w", err)
 		}
@@ -143,7 +143,7 @@ func (api *OpenBarAPI) updateConfigValue(ctx context.Context, w http.ResponseWri
 		}
 
 		cfg[configKey] = reqCfg[configKey]
-		err = db.SetConfig(ctx, tx, cfg)
+		err = openbardb.SetConfig(ctx, tx, cfg)
 		if err != nil {
 			return fmt.Errorf("failed to set config in db: %w", err)
 		}
@@ -178,7 +178,7 @@ func (api *OpenBarAPI) setConfigValue(ctx context.Context, w http.ResponseWriter
 	}
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
-		cfg, err := db.GetConfig(ctx, tx)
+		cfg, err := openbardb.GetConfig(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("failed to get config from db: %w", err)
 		}
@@ -189,7 +189,7 @@ func (api *OpenBarAPI) setConfigValue(ctx context.Context, w http.ResponseWriter
 		}
 
 		cfg[configKey] = reqCfg[configKey]
-		err = db.SetConfig(ctx, tx, cfg)
+		err = openbardb.SetConfig(ctx, tx, cfg)
 		if err != nil {
 			return fmt.Errorf("failed to set config in db: %w", err)
 		}
@@ -209,7 +209,7 @@ func (api *OpenBarAPI) deleteConfigValue(ctx context.Context, w http.ResponseWri
 	configKey := pathTokens[len(pathTokens)-1]
 
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.DeleteConfigValues(ctx, tx, configKey)
+		err := openbardb.DeleteConfigValues(ctx, tx, configKey)
 		if err != nil {
 			return fmt.Errorf("failed to delete config values from db: %w", err)
 		}

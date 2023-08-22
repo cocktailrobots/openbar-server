@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"github.com/gocraft/dbr/v2"
 	"go.uber.org/zap"
 	"net/http"
@@ -35,7 +35,7 @@ func (api *OpenBarAPI) PostFluidsHandler(ctx context.Context, w http.ResponseWri
 	}
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.UpdateFluids(ctx, tx, fluidsReq.ToDbFluids())
+		err := openbardb.UpdateFluids(ctx, tx, fluidsReq.ToDbFluids())
 		if err != nil {
 			return fmt.Errorf("error updating fluid: %w", err)
 		}
@@ -50,7 +50,7 @@ func (api *OpenBarAPI) PostFluidsHandler(ctx context.Context, w http.ResponseWri
 func (api *OpenBarAPI) GetFluidsHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	var fluidsResp wire.Fluids
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		fluids, err := db.ListFluids(ctx, tx)
+		fluids, err := openbardb.ListFluids(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("error getting fluids from db: %w", err)
 		}

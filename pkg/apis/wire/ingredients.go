@@ -2,7 +2,7 @@ package wire
 
 import (
 	"fmt"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/cocktailsdb"
 	"strings"
 )
 
@@ -16,11 +16,11 @@ type Ingredient struct {
 // Ingredients is a slice of ingredients.
 type Ingredients []Ingredient
 
-// ToDbIngredients converts a list of Ingredients to a list of db.Ingredients.
-func (ing Ingredients) ToDbIngredients() []db.Ingredient {
-	ingredients := make([]db.Ingredient, len(ing))
+// ToDbIngredients converts a list of Ingredients to a list of cocktailsdb.Ingredients.
+func (ing Ingredients) ToDbIngredients() []cocktailsdb.Ingredient {
+	ingredients := make([]cocktailsdb.Ingredient, len(ing))
 	for i := range ing {
-		ingredients[i] = db.Ingredient{
+		ingredients[i] = cocktailsdb.Ingredient{
 			Name:        ing[i].Name,
 			DisplayName: ing[i].DisplayName,
 			Description: ing[i].Description,
@@ -46,8 +46,8 @@ func (ing Ingredients) Validate() error {
 	return nil
 }
 
-// FromDbIngredients converts a list of db.Ingredients to a list of Ingredients.
-func FromDbIngredients(ingredients []db.Ingredient) Ingredients {
+// FromDbIngredients converts a list of cocktailsdb.Ingredients to a list of Ingredients.
+func FromDbIngredients(ingredients []cocktailsdb.Ingredient) Ingredients {
 	ing := make(Ingredients, len(ingredients))
 	for i := range ingredients {
 		ing[i] = Ingredient{

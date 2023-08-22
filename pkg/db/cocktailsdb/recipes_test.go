@@ -1,4 +1,4 @@
-package db
+package cocktailsdb
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func (s *testSuite) TestRecipes() {
 
 func (s *testSuite) testGetAllRecipes() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	recipes, err := GetRecipes(ctx, tx)
@@ -34,7 +34,7 @@ func (s *testSuite) testGetAllRecipes() {
 
 func (s *testSuite) testGetRecipesById() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	recipes, err := GetRecipesById(ctx, tx, "noexist")
@@ -65,7 +65,7 @@ func (s *testSuite) testGetRecipesById() {
 
 func (s *testSuite) testCreateRecipe() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	cocktail := Cocktail{
@@ -100,7 +100,7 @@ func (s *testSuite) testCreateRecipe() {
 
 func (s *testSuite) testDeleteRecipes() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	recipes, err := GetRecipes(ctx, tx)
@@ -117,7 +117,7 @@ func (s *testSuite) testDeleteRecipes() {
 
 func (s *testSuite) testGetRecipesForIngredients() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	recipes, err := GetRecipesForIngredients(ctx, tx, []string{"bourbon", "vodka"})
@@ -138,7 +138,7 @@ func (s *testSuite) testGetRecipesForIngredients() {
 
 func (s *testSuite) testUpdateRecipe() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	recipes, err := GetRecipes(ctx, tx)

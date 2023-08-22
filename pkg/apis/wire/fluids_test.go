@@ -2,13 +2,13 @@ package wire
 
 import (
 	"encoding/json"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestFluids(t *testing.T) {
-	fluids := []db.Fluid{
+	fluids := []openbardb.Fluid{
 		{
 			Idx:   0,
 			Fluid: ptr("gin"),
@@ -40,7 +40,7 @@ func TestFluids(t *testing.T) {
 	require.True(t, fluidsEqual(fluids, fluids2))
 }
 
-func fluidsEqual(fluids, fluids2 []db.Fluid) bool {
+func fluidsEqual(fluids, fluids2 []openbardb.Fluid) bool {
 	if len(fluids) != len(fluids2) {
 		return false
 	}

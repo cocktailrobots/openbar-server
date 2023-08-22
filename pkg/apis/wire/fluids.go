@@ -2,7 +2,7 @@ package wire
 
 import (
 	"fmt"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"github.com/cocktailrobots/openbar-server/pkg/util"
 	"strings"
 )
@@ -16,11 +16,11 @@ type Fluid struct {
 // Fluids is a slice of fluids.
 type Fluids []Fluid
 
-// ToDbFluids converts a list of Fluids to a list of db.Fluids.
-func (f Fluids) ToDbFluids() []db.Fluid {
-	fluids := make([]db.Fluid, len(f))
+// ToDbFluids converts a list of Fluids to a list of openbardb.Fluids.
+func (f Fluids) ToDbFluids() []openbardb.Fluid {
+	fluids := make([]openbardb.Fluid, len(f))
 	for i := range f {
-		fluids[i] = db.Fluid{
+		fluids[i] = openbardb.Fluid{
 			Idx:   i,
 			Fluid: &f[i].ID,
 		}
@@ -45,8 +45,8 @@ func (f Fluids) Validate() error {
 	return nil
 }
 
-// FromDbFluids converts a list of db.Fluids to a list of Fluids.
-func FromDbFluids(fluids []db.Fluid) Fluids {
+// FromDbFluids converts a list of openbardb.Fluids to a list of Fluids.
+func FromDbFluids(fluids []openbardb.Fluid) Fluids {
 	f := make(Fluids, len(fluids))
 	for _, fluid := range fluids {
 		if fluid.Idx < 0 || fluid.Idx >= len(fluids) {

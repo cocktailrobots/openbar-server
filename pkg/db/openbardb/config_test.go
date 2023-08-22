@@ -1,10 +1,10 @@
-package db
+package openbardb
 
 import "context"
 
 func (s *testSuite) TestConfig() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, OpenBarDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	config, err := GetConfig(ctx, tx)

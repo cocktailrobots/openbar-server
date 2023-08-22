@@ -31,6 +31,10 @@ type DBSuite struct {
 }
 
 func NewDBSuite(database, branch, schemaDir, dbDir string) *DBSuite {
+	// If a dbDir is not provided, create a temporary directory to use for the database.
+	// When SetupSuite is called, the migration scripts located in schemaDir will be run.
+	// If a dbDir is provided, it is assumed that the database has already been created and
+	// is seeded with data.
 	if len(dbDir) == 0 {
 		tmpDir, err := os.MkdirTemp("", database+"*")
 
@@ -61,23 +65,28 @@ func NewDBSuite(database, branch, schemaDir, dbDir string) *DBSuite {
 }
 
 func (s *DBSuite) SetupSuite() {
+	// Append the branch to the database name if a branch is provided.
 	database := s.Database
 	if len(s.Branch) > 0 {
 		database = database + "/" + s.Branch
 	}
 
+	// Use the dolt driver to open a connection to the database.
 	openDB, err := sql.Open("dolt", "file://"+s.DbDir+"?commitname=Test%20Committer&commitemail=test@test.com&database="+s.Database+"&multistatements=true")
 	if err != nil {
 		panic(err)
 	}
 
 	s.conn = &dbr.Connection{DB: openDB, Dialect: dialect.MySQL, EventReceiver: &dbr.NullEventReceiver{}}
+
+	// Create a DBProvider which will provide the database to our tests
 	s.DBProvider, err = dbutils.NewDBProvider(s.conn, s.Database, s.SchemaDir)
 	if err != nil {
 		panic(err)
 	}
 	sess := s.Session()
 
+	// Query the database to get the hash of the last commit on our branch and store it
 	tx, err := sess.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		panic(err)
@@ -93,8 +102,7 @@ func (s *DBSuite) SetupSuite() {
 	}
 
 	s.Hash = bh.Hash
-
-	s.LogWorking(tx)
+	//s.LogWorking(tx)
 }
 
 func (s *DBSuite) TearDownSuite() {
@@ -126,6 +134,8 @@ func (s *DBSuite) SetupTest()                           {}
 func (s *DBSuite) TearDownTest()                        {}
 func (s *DBSuite) AfterTest(suiteName, testName string) {}
 
+// BeforeTest is called before each test. It calls resetToHash to reset the database to the
+// hash of the last commit on the branch.
 func (s *DBSuite) BeforeTest(suiteName, testName string) {
 	ctx := context.Background()
 	err := s.Transaction(ctx, func(tx *dbr.Tx) error {
@@ -143,11 +153,13 @@ func (s *DBSuite) BeforeTest(suiteName, testName string) {
 }
 
 func (s *DBSuite) resetToHash(ctx context.Context, tx *dbr.Tx) error {
+	// Add all tables to the staging area so that everything will be reset and new tables will be deleted
 	_, err := tx.ExecContext(ctx, "call dolt_add('-A')")
 	if err != nil {
 		return err
 	}
 
+	// Reset the database to the hash of the last commit on the branch that we stored at set up
 	_, err = tx.ExecContext(ctx, fmt.Sprintf("call dolt_reset('--hard','%s')", s.Hash))
 	return err
 }
@@ -169,11 +181,10 @@ func (s *DBSuite) LogWorking(tx *dbr.Tx) {
 	}
 }
 
-func (s *DBSuite) Run(name string, f func()) {
-	s.BeforeTest("suite", name)
-	defer s.AfterTest("suite", name)
+func (s *DBSuite) SetupSubTest() {
+	s.BeforeTest("", "")
+}
 
-	s.Suite.Run(name, func() {
-		f()
-	})
+func (s *DBSuite) TearDownSubTest() {
+	s.AfterTest("", "")
 }

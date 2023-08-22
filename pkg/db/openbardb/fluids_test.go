@@ -1,4 +1,4 @@
-package db
+package openbardb
 
 import (
 	"context"
@@ -12,7 +12,7 @@ func (s *testSuite) TestFluids() {
 
 func (s *testSuite) testListFluids() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, OpenBarDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 	err = InitFluids(ctx, tx, 8)
 	s.Require().NoError(err)
@@ -29,7 +29,7 @@ func (s *testSuite) testListFluids() {
 
 func (s *testSuite) testUpdateFluids() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, OpenBarDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 	err = InitFluids(ctx, tx, 8)
 	s.Require().NoError(err)

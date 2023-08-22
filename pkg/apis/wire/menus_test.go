@@ -1,13 +1,13 @@
 package wire
 
 import (
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestMenus(t *testing.T) {
-	menus := []*db.Menu{
+	menus := []*openbardb.Menu{
 		{
 			Name: "Margaritas",
 			Ingredients: []string{

@@ -1,4 +1,4 @@
-package db
+package openbardb
 
 import (
 	"context"
@@ -15,6 +15,7 @@ const (
 	ingredientNameCol = "ingredient_name"
 	recipeIdCol       = "recipe_id"
 	menuNameFkCol     = "menu_name_fk"
+	nameCol           = "name"
 )
 
 type MenuItem struct {

@@ -1,4 +1,4 @@
-package db
+package openbardb
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func (s *testSuite) TestMenus() {
 
 func (s *testSuite) testGetMenuNames() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, OpenBarDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	menuNames, err := GetMenuNames(ctx, tx)
@@ -33,7 +33,7 @@ func (s *testSuite) testGetMenuNames() {
 
 func (s *testSuite) testMenuIngredients() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, OpenBarDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	menu, err := GetMenu(ctx, tx, "test_menu")
@@ -53,7 +53,7 @@ func (s *testSuite) testMenuIngredients() {
 
 func (s *testSuite) testDeleteMenu() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, OpenBarDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	err = CreateMenu(ctx, tx, "test_menu", []string{"gin", "rye"})
@@ -76,7 +76,7 @@ func (s *testSuite) testDeleteMenu() {
 
 func (s *testSuite) testMenuItems() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, OpenBarDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	err = CreateMenu(ctx, tx, "test_menu", []string{"gin", "rye"})

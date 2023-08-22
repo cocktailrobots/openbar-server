@@ -2,7 +2,7 @@ package wire
 
 import (
 	"fmt"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/cocktailsdb"
 )
 
 // RecipeIngredient is a single ingredient in a recipe.
@@ -23,12 +23,12 @@ type Recipe struct {
 
 type Recipes []Recipe
 
-func (r Recipes) ToDbRecipes() []db.Recipe {
-	recipes := make([]db.Recipe, 0, len(r))
+func (r Recipes) ToDbRecipes() []cocktailsdb.Recipe {
+	recipes := make([]cocktailsdb.Recipe, 0, len(r))
 	for _, recipe := range r {
-		ingredients := make([]db.RecipeIngredient, len(recipe.Ingredients))
+		ingredients := make([]cocktailsdb.RecipeIngredient, len(recipe.Ingredients))
 		for i, ingredient := range recipe.Ingredients {
-			ingredients[i] = db.RecipeIngredient{
+			ingredients[i] = cocktailsdb.RecipeIngredient{
 				RecipeIdFk:   recipe.Id,
 				IngredientFk: ingredient.Name,
 				Amount:       ingredient.Amount,
@@ -45,7 +45,7 @@ func (r Recipes) ToDbRecipes() []db.Recipe {
 			directions = &recipe.Directions
 		}
 
-		recipes = append(recipes, db.Recipe{
+		recipes = append(recipes, cocktailsdb.Recipe{
 			Id:          recipe.Id,
 			DisplayName: recipe.DisplayName,
 			CocktailFk:  recipe.CocktailId,
@@ -80,7 +80,7 @@ func (r Recipes) Validate() error {
 	return nil
 }
 
-func FromDbRecipes(recipes []db.Recipe) Recipes {
+func FromDbRecipes(recipes []cocktailsdb.Recipe) Recipes {
 	r := make(Recipes, 0, len(recipes))
 	for _, recipe := range recipes {
 		ingredients := make([]RecipeIngredient, len(recipe.Ingredients))

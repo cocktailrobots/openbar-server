@@ -2,21 +2,20 @@ package wire
 
 import (
 	"encoding/json"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/cocktailsdb"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestRecipes(t *testing.T) {
-
-	recipes := []db.Recipe{
+	recipes := []cocktailsdb.Recipe{
 		{
 			Id:          "00000000-0000-0000-0000-000000000000",
 			CocktailFk:  "negroni",
 			DisplayName: "Negroni",
 			Description: ptr("Campari, Gin, and Sweet Vermouth"),
 			Directions:  ptr("Mix equal parts of Gin, Campari, and Sweet Vermouth in a glass with ice. Stir. Garnish with an orange peel."),
-			Ingredients: []db.RecipeIngredient{
+			Ingredients: []cocktailsdb.RecipeIngredient{
 				{
 					RecipeIdFk:   "00000000-0000-0000-0000-000000000000",
 					IngredientFk: "gin",
@@ -40,7 +39,7 @@ func TestRecipes(t *testing.T) {
 			DisplayName: "Boulevardier",
 			Description: ptr("Campari, Bourbon, and Sweet Vermouth"),
 			Directions:  ptr("Mix equal parts of Bourbon, Campari, and Sweet Vermouth in a glass with ice. Stir. Garnish with an orange peel."),
-			Ingredients: []db.RecipeIngredient{
+			Ingredients: []cocktailsdb.RecipeIngredient{
 				{
 					RecipeIdFk:   "00000000-0000-0000-0000-000000000001",
 					IngredientFk: "bourbon",
@@ -73,12 +72,12 @@ func TestRecipes(t *testing.T) {
 	require.True(t, repipesArEqual(recipes, recipes2))
 }
 
-func repipesArEqual(recipes []db.Recipe, recipes2 []db.Recipe) bool {
+func repipesArEqual(recipes []cocktailsdb.Recipe, recipes2 []cocktailsdb.Recipe) bool {
 	if len(recipes) != len(recipes2) {
 		return false
 	}
 
-	repcipesById := make(map[string]db.Recipe)
+	repcipesById := make(map[string]cocktailsdb.Recipe)
 	for i := range recipes {
 		repcipesById[recipes[i].Id] = recipes[i]
 	}
@@ -98,12 +97,12 @@ func repipesArEqual(recipes []db.Recipe, recipes2 []db.Recipe) bool {
 	return true
 }
 
-func recipeIngredientsAreEqual(ingredients, ingredients2 []db.RecipeIngredient) bool {
+func recipeIngredientsAreEqual(ingredients, ingredients2 []cocktailsdb.RecipeIngredient) bool {
 	if len(ingredients) != len(ingredients2) {
 		return false
 	}
 
-	ingredientsById := make(map[string]db.RecipeIngredient)
+	ingredientsById := make(map[string]cocktailsdb.RecipeIngredient)
 	for i := range ingredients {
 		ingredientsById[ingredients[i].IngredientFk] = ingredients[i]
 	}

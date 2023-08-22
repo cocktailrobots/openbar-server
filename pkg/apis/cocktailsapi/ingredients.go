@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/apis"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/cocktailsdb"
 	"github.com/gocraft/dbr/v2"
 	"go.uber.org/zap"
 	"net/http"
@@ -28,10 +28,10 @@ func (api *CocktailsAPI) IngredientsHandler(w http.ResponseWriter, r *http.Reque
 
 // ListIngredientsHandler handles requests to GET /ingredients.
 func (api *CocktailsAPI) ListIngredientsHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	var ingredients []db.Ingredient
+	var ingredients []cocktailsdb.Ingredient
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
 		var err error
-		ingredients, err = db.GetIngredients(ctx, tx)
+		ingredients, err = cocktailsdb.GetIngredients(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("error getting ingredients from db: %w", err)
 		}
@@ -54,7 +54,7 @@ func (api *CocktailsAPI) PostIngredientsHandler(ctx context.Context, w http.Resp
 
 	ingredients := reqIngredients.ToDbIngredients()
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.CreateIngredients(ctx, tx, ingredients...)
+		err := cocktailsdb.CreateIngredients(ctx, tx, ingredients...)
 		if err != nil {
 			return fmt.Errorf("error creating ingredient in db: %w", err)
 		}
@@ -95,10 +95,10 @@ func (api *CocktailsAPI) GetIngredientHandler(ctx context.Context, w http.Respon
 
 	ingredientName := pathTokens[len(pathTokens)-1]
 
-	var ingredients []db.Ingredient
+	var ingredients []cocktailsdb.Ingredient
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
 		var err error
-		ingredients, err = db.GetIngredientsWithNames(ctx, tx, ingredientName)
+		ingredients, err = cocktailsdb.GetIngredientsWithNames(ctx, tx, ingredientName)
 		if err != nil {
 			return fmt.Errorf("error getting ingredients from db: %w", err)
 		}
@@ -143,7 +143,7 @@ func (api *CocktailsAPI) UpdateIngredientHandler(ctx context.Context, w http.Res
 	}
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.UpdateIngredient(ctx, tx, ingredient)
+		err := cocktailsdb.UpdateIngredient(ctx, tx, ingredient)
 		if err != nil {
 			return fmt.Errorf("error updating ingredient in db: %w", err)
 		}
@@ -165,7 +165,7 @@ func (api *CocktailsAPI) DeleteIngredientHandler(ctx context.Context, w http.Res
 	ingredientName := pathTokens[len(pathTokens)-1]
 
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.DeleteIngredients(ctx, tx, ingredientName)
+		err := cocktailsdb.DeleteIngredients(ctx, tx, ingredientName)
 		if err != nil {
 			return fmt.Errorf("error deleting ingredient in db: %w", err)
 		}

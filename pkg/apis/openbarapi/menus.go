@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/apis"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"github.com/gocraft/dbr/v2"
 	"go.uber.org/zap"
 	"net/http"
@@ -29,7 +29,7 @@ func (api *OpenBarAPI) GetMenus(ctx context.Context, w http.ResponseWriter, r *h
 	var menus []string
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
 		var err error
-		menus, err = db.GetMenuNames(ctx, tx)
+		menus, err = openbardb.GetMenuNames(ctx, tx)
 		return err
 	})
 
@@ -47,7 +47,7 @@ func (api *OpenBarAPI) PostMenus(ctx context.Context, w http.ResponseWriter, r *
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
 		for _, menu := range menus {
-			err := db.CreateMenu(ctx, tx, menu.Name, menu.Ingredients)
+			err := openbardb.CreateMenu(ctx, tx, menu.Name, menu.Ingredients)
 			if err != nil {
 				return fmt.Errorf("error creating menu: %w", err)
 			}
@@ -85,12 +85,12 @@ func (api *OpenBarAPI) GetMenu(ctx context.Context, w http.ResponseWriter, r *ht
 
 	var menus wire.Menu
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		menu, err := db.GetMenu(ctx, tx, menuName)
+		menu, err := openbardb.GetMenu(ctx, tx, menuName)
 		if err != nil {
 			return fmt.Errorf("error getting menu: %w", err)
 		}
 
-		menus = wire.FromDbMenus([]*db.Menu{menu})[0]
+		menus = wire.FromDbMenus([]*openbardb.Menu{menu})[0]
 		return nil
 	})
 
@@ -107,7 +107,7 @@ func (api *OpenBarAPI) DeleteMenu(ctx context.Context, w http.ResponseWriter, r 
 	menuName := tokens[len(tokens)-1]
 
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.DeleteMenu(ctx, tx, menuName)
+		err := openbardb.DeleteMenu(ctx, tx, menuName)
 		if err != nil {
 			return fmt.Errorf("error deleting menu: %w", err)
 		}
@@ -136,12 +136,12 @@ func (api *OpenBarAPI) PatchMenu(ctx context.Context, w http.ResponseWriter, r *
 	}
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
-		_, err := db.GetMenu(ctx, tx, menuName)
+		_, err := openbardb.GetMenu(ctx, tx, menuName)
 		if err != nil {
 			return fmt.Errorf("error getting menu '%s': %w", menuName, err)
 		}
 
-		err = db.UpdateMenu(ctx, tx, menuName, menu.Ingredients, menu.RecipeIds)
+		err = openbardb.UpdateMenu(ctx, tx, menuName, menu.Ingredients, menu.RecipeIds)
 		if err != nil {
 			return fmt.Errorf("error updating menu: %w", err)
 		}
@@ -174,7 +174,7 @@ func (api *OpenBarAPI) GetMenuRecipes(ctx context.Context, w http.ResponseWriter
 
 	var recipes []string
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		menu, err := db.GetMenu(ctx, tx, menuName)
+		menu, err := openbardb.GetMenu(ctx, tx, menuName)
 		if err != nil {
 			return fmt.Errorf("error getting menu: %w", err)
 		}
@@ -210,7 +210,7 @@ func (api *OpenBarAPI) DeleteRecipeFromMenuHandler(ctx context.Context, w http.R
 	recipeId := tokens[len(tokens)-1]
 
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.RemoveMenuItem(ctx, tx, menuName, recipeId)
+		err := openbardb.RemoveMenuItem(ctx, tx, menuName, recipeId)
 		if err != nil {
 			return fmt.Errorf("error removing menu item: %w", err)
 		}
@@ -232,7 +232,7 @@ func (api *OpenBarAPI) AddRecipeToMenuHandler(ctx context.Context, w http.Respon
 	recipeId := tokens[len(tokens)-1]
 
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.AddMenuItem(ctx, tx, menuName, recipeId)
+		err := openbardb.AddMenuItem(ctx, tx, menuName, recipeId)
 		if err != nil {
 			return fmt.Errorf("error adding menu item: %w", err)
 		}

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/apis"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/cocktailsdb"
 	"github.com/gocraft/dbr/v2"
 	"go.uber.org/zap"
 	"net/http"
@@ -45,12 +45,12 @@ func (api *CocktailsAPI) ListRecipesHandler(ctx context.Context, w http.Response
 
 	var recipes wire.Recipes
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		var recipeToIngredients []db.Recipe
+		var recipeToIngredients []cocktailsdb.Recipe
 		var err error
 		if len(fluids) > 0 {
-			recipeToIngredients, err = db.GetRecipesForIngredients(ctx, tx, fluids)
+			recipeToIngredients, err = cocktailsdb.GetRecipesForIngredients(ctx, tx, fluids)
 		} else {
-			recipeToIngredients, err = db.GetRecipes(ctx, tx)
+			recipeToIngredients, err = cocktailsdb.GetRecipes(ctx, tx)
 		}
 
 		if err != nil {
@@ -75,7 +75,7 @@ func (api *CocktailsAPI) PostRecipesHandler(ctx context.Context, w http.Response
 	recipes := reqRecipes.ToDbRecipes()
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
 		for _, recipe := range recipes {
-			err := db.CreateRecipe(ctx, tx, &recipe)
+			err := cocktailsdb.CreateRecipe(ctx, tx, &recipe)
 			if err != nil {
 				return fmt.Errorf("error updating recipe '%s': %w", recipe.Id, err)
 			}
@@ -114,7 +114,7 @@ func (api *CocktailsAPI) GetRecipe(ctx context.Context, w http.ResponseWriter, r
 	recipeId := pathTokens[len(pathTokens)-1]
 	var recipe wire.Recipe
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		recipes, err := db.GetRecipesById(ctx, tx, recipeId)
+		recipes, err := cocktailsdb.GetRecipesById(ctx, tx, recipeId)
 		if err != nil {
 			return fmt.Errorf("error getting recipes from db: %w", err)
 		}
@@ -141,7 +141,7 @@ func (api *CocktailsAPI) DeleteRecipe(ctx context.Context, w http.ResponseWriter
 	recipeId := pathTokens[len(pathTokens)-1]
 	api.Logger().Info("Deleting recipe", zap.String("recipe", recipeId))
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.DeleteRecipes(ctx, tx, recipeId)
+		err := cocktailsdb.DeleteRecipes(ctx, tx, recipeId)
 		if err != nil {
 			return fmt.Errorf("error deleting recipe '%s': %w", recipeId, err)
 		}
@@ -176,7 +176,7 @@ func (api *CocktailsAPI) PatchRecipe(ctx context.Context, w http.ResponseWriter,
 	}
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.UpdateRecipe(ctx, tx, &recipe)
+		err := cocktailsdb.UpdateRecipe(ctx, tx, &recipe)
 		if err != nil {
 			return fmt.Errorf("error updating recipe '%s': %w", recipeId, err)
 		}

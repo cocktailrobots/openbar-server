@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/apis"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/cocktailsdb"
 	"github.com/gocraft/dbr/v2"
 	"net/http"
 )
@@ -28,10 +28,10 @@ func (api *CocktailsAPI) CocktailsHandler(w http.ResponseWriter, r *http.Request
 
 // ListCocktailsHandler handles requests to GET /cocktails.
 func (api *CocktailsAPI) ListCocktailsHandler(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-	var cocktails []db.Cocktail
+	var cocktails []cocktailsdb.Cocktail
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
 		var err error
-		cocktails, err = db.GetCocktails(ctx, tx)
+		cocktails, err = cocktailsdb.GetCocktails(ctx, tx)
 		if err != nil {
 			return fmt.Errorf("error getting cocktails from db: %w", err)
 		}
@@ -59,7 +59,7 @@ func (api *CocktailsAPI) PostCocktailsHandler(ctx context.Context, w http.Respon
 
 	cocktails := reqCocktails.ToDbCocktails()
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.AddCocktails(ctx, tx, cocktails...)
+		err := cocktailsdb.AddCocktails(ctx, tx, cocktails...)
 		if err != nil {
 			return fmt.Errorf("error updating cocktail: %w", err)
 		}
@@ -95,10 +95,10 @@ func (api *CocktailsAPI) GetCocktailsHandler(ctx context.Context, w http.Respons
 
 	cocktailName := pathTokens[len(pathTokens)-1]
 
-	var cocktails []db.Cocktail
+	var cocktails []cocktailsdb.Cocktail
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
 		var err error
-		cocktails, err = db.GetCocktailsWithNames(ctx, tx, cocktailName)
+		cocktails, err = cocktailsdb.GetCocktailsWithNames(ctx, tx, cocktailName)
 		if err != nil {
 			return fmt.Errorf("error getting cocktails from db: %w", err)
 		}
@@ -139,14 +139,14 @@ func (api *CocktailsAPI) UpdateCocktailHandler(ctx context.Context, w http.Respo
 
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
 		dbCocktail := wire.Cocktails{cocktail}.ToDbCocktails()[0]
-		existing, err := db.GetCocktailsWithNames(ctx, tx, cocktailName)
+		existing, err := cocktailsdb.GetCocktailsWithNames(ctx, tx, cocktailName)
 		if err != nil {
 			return fmt.Errorf("error getting cocktails from db: %w", err)
 		} else if len(existing) == 0 {
 			return apis.ErrNotFound
 		}
 
-		err = db.UpdateCocktail(ctx, tx, &dbCocktail)
+		err = cocktailsdb.UpdateCocktail(ctx, tx, &dbCocktail)
 		if err != nil {
 			return fmt.Errorf("error updating cocktail: %w", err)
 		}
@@ -167,7 +167,7 @@ func (api *CocktailsAPI) DeleteCocktailHandler(ctx context.Context, w http.Respo
 	cocktailName := pathTokens[len(pathTokens)-1]
 
 	err := api.Transaction(ctx, func(tx *dbr.Tx) error {
-		err := db.DeleteCocktails(ctx, tx, cocktailName)
+		err := cocktailsdb.DeleteCocktails(ctx, tx, cocktailName)
 		if err != nil {
 			if errors.Is(err, dbr.ErrNotFound) {
 				return apis.ErrNotFound

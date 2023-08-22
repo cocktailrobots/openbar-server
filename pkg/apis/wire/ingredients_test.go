@@ -2,13 +2,13 @@ package wire
 
 import (
 	"encoding/json"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/cocktailsdb"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestIngredients(t *testing.T) {
-	ingredients := []db.Ingredient{
+	ingredients := []cocktailsdb.Ingredient{
 		{
 			Name:        "gin",
 			DisplayName: "Gin",

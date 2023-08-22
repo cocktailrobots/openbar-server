@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
-	"github.com/cocktailrobots/openbar-server/pkg/db"
+	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"github.com/cocktailrobots/openbar-server/pkg/util/test"
 	"net/http"
 	"strconv"
 )
 
 func (s *testSuite) TestConfig() {
-	cfg := wire.Config{db.NumPumpsConfigKey: "0"}
+	cfg := wire.Config{openbardb.NumPumpsConfigKey: "0"}
 	getCfgAndTest(s, cfg)
 	testPumpsAndFluids(s, 0)
 
@@ -27,7 +27,7 @@ func (s *testSuite) TestConfig() {
 		"three": "3",
 	}
 	setConfig(s, cfg)
-	cfg[db.NumPumpsConfigKey] = "0" // Required key
+	cfg[openbardb.NumPumpsConfigKey] = "0" // Required key
 	getCfgAndTest(s, cfg)
 
 	// Test patching a single value
@@ -112,14 +112,14 @@ func (s *testSuite) TestConfig() {
 	updateNumPumpsConfigKey(s, 6)
 	updateNumPumpsConfigKey(s, 10)
 
-	expected = wire.Config{db.NumPumpsConfigKey: "0"}
+	expected = wire.Config{openbardb.NumPumpsConfigKey: "0"}
 	setConfig(s, wire.Config{})
 	getCfgAndTest(s, expected)
 	testPumpsAndFluids(s, 0)
 }
 
 func updateNumPumpsConfigKey(s *testSuite, numPumps int) {
-	cfg := map[string]string{db.NumPumpsConfigKey: strconv.FormatInt(int64(numPumps), 10)}
+	cfg := map[string]string{openbardb.NumPumpsConfigKey: strconv.FormatInt(int64(numPumps), 10)}
 
 	req, err := http.NewRequest(http.MethodPost, "/config", test.JsonReaderForObject(cfg))
 	s.Require().NoError(err)
@@ -173,12 +173,12 @@ func testPumpsAndFluids(s *testSuite, expected int) {
 	defer tx.Rollback()
 
 	var numPumps int
-	err = tx.Select("count(*)").From(db.PumpsTable).LoadOneContext(ctx, &numPumps)
+	err = tx.Select("count(*)").From(openbardb.PumpsTable).LoadOneContext(ctx, &numPumps)
 	s.Require().NoError(err)
 	s.Require().Equal(expected, numPumps)
 
 	var numFluids int
-	err = tx.Select("count(*)").From(db.FluidsTable).LoadOneContext(ctx, &numFluids)
+	err = tx.Select("count(*)").From(openbardb.FluidsTable).LoadOneContext(ctx, &numFluids)
 	s.Require().NoError(err)
 	s.Require().Equal(expected, numFluids)
 }

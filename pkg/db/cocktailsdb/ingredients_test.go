@@ -1,4 +1,4 @@
-package db
+package cocktailsdb
 
 import (
 	"context"
@@ -23,7 +23,7 @@ func (s *testSuite) TestIngredients() {
 
 func (s *testSuite) testGetAllIngredients() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	ingredients, err := GetIngredients(ctx, tx)
@@ -33,7 +33,7 @@ func (s *testSuite) testGetAllIngredients() {
 
 func (s *testSuite) testGetIngredientsWithNames() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	ingredients, err := GetIngredientsWithNames(ctx, tx, "noexist")
@@ -56,7 +56,7 @@ func (s *testSuite) testGetIngredientsWithNames() {
 
 func (s *testSuite) testCreateIngredient() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	ingredient := Ingredient{
@@ -75,7 +75,7 @@ func (s *testSuite) testDeleteIngredients() {
 	const unusedIngredient = "dry_vermouth"
 
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	ingredients, err := GetIngredients(ctx, tx)
@@ -92,7 +92,7 @@ func (s *testSuite) testDeleteIngredients() {
 
 func (s *testSuite) testUpdateIngredient() {
 	ctx := context.Background()
-	tx, err := s.BeginTx(ctx, CocktailsDB)
+	tx, err := s.BeginTx(ctx)
 	s.Require().NoError(err)
 
 	ingredients, err := GetIngredientsWithNames(ctx, tx, "gin")
