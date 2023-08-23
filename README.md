@@ -5,7 +5,7 @@ There will be additional components published in the future including a client a
 such as the EAGLE files for PCB creation, and different models for robot bartenders and their components which can be used for creating your
 own robot bartender.
 
-
+![Robot Bartender](https://raw.githubusercontent.com/cocktailrobots/openbar-server/main/rb.jpeg)
 
 # openbar-server
 openbar-server provides two REST APIs written in Go. 
