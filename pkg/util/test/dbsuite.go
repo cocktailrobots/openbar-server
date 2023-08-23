@@ -12,6 +12,7 @@ import (
 	_ "github.com/dolthub/driver"
 	"github.com/gocraft/dbr/v2"
 	"github.com/gocraft/dbr/v2/dialect"
+	cp "github.com/otiai10/copy"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -65,6 +66,16 @@ func NewDBSuite(database, branch, schemaDir, dbDir string) *DBSuite {
 }
 
 func (s *DBSuite) SetupSuite() {
+	if s.DbDir != "" {
+		newDbDir := s.T().TempDir()
+		err := cp.Copy(s.DbDir, newDbDir)
+		if err != nil {
+			panic(err)
+		}
+
+		s.DbDir = newDbDir
+	}
+
 	// Append the branch to the database name if a branch is provided.
 	database := s.Database
 	if len(s.Branch) > 0 {

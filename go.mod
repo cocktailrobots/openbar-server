@@ -10,6 +10,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
+	github.com/otiai10/copy v1.12.0
 	github.com/stretchr/testify v1.8.3
 	go.uber.org/zap v1.25.0
 	golang.org/x/sync v0.3.0
