@@ -18,12 +18,13 @@ const (
 
 // ConnParams contains the parameters needed to connect to the database
 type ConnParams struct {
-	Host   string
-	User   string
-	Pass   string
-	DbName string
-	Branch string
-	Port   int
+	Host            string
+	User            string
+	Pass            string
+	DbName          string
+	Branch          string
+	Port            int
+	MultiStatements bool
 }
 
 // String returns a string representation of the connection parameters
@@ -50,6 +51,7 @@ func NewConn(ctx context.Context, params *ConnParams) (*dbr.Connection, error) {
 	}
 
 	cfg.ParseTime = true
+	cfg.MultiStatements = params.MultiStatements
 
 	connector, err := mysql.NewConnector(cfg)
 	if err != nil {

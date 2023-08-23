@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,7 +23,8 @@ import (
 )
 
 const (
-	mainBranch = "main"
+	mainBranch       = "main"
+	migrationsDirArg = "migration-dir"
 )
 
 func installSignalHandler(cancelCtx context.CancelFunc) {
@@ -40,8 +42,11 @@ func installSignalHandler(cancelCtx context.CancelFunc) {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("Usage: openbar-server <config file>")
+	migrationsDir := flag.String(migrationsDirArg, "", "run migrations")
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		log.Fatal("Usage: openbar-server [-migration-dir=<migration_file_dir>] <config file>")
 	}
 
 	ctx := context.Background()
@@ -53,10 +58,20 @@ func main() {
 
 	ctx, cancelCtx := context.WithCancel(ctx)
 
-	configFile := os.Args[1]
+	configFile := flag.Args()[0]
 	config, err := ReadConfig(configFile, logger)
 	if err != nil {
 		log.Fatal("Failed to read " + configFile + " - " + err.Error())
+	}
+
+	if migrationsDir != nil && len(*migrationsDir) > 0 {
+		err := runMigrations(ctx, *migrationsDir, config)
+		if err != nil {
+			log.Fatal(fmt.Printf("Failed to run migrations: %s", err.Error()))
+		} else {
+			log.Printf("Successfully ran migrations")
+			os.Exit(0)
+		}
 	}
 
 	installSignalHandler(cancelCtx)
@@ -67,14 +82,24 @@ func main() {
 	}
 }
 
+func runMigrations(ctx context.Context, migrationsDir string, config *Config) error {
+	openBarConn, err := connectToDB(ctx, "", "", config, true)
+	if err != nil {
+		return fmt.Errorf("failed to initialize database: %w", err)
+	}
+	defer openBarConn.Close()
+
+	return dbutils.MigrateUp(openBarConn, db.OpenBarDB, migrationsDir)
+}
+
 func run(ctx context.Context, logger *zap.Logger, config *Config) error {
-	cockConn, err := connectToDB(ctx, db.CocktailsDB, mainBranch, config)
+	cockConn, err := connectToDB(ctx, db.CocktailsDB, mainBranch, config, false)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 	defer cockConn.Close()
 
-	openBarConn, err := connectToDB(ctx, db.OpenBarDB, mainBranch, config)
+	openBarConn, err := connectToDB(ctx, db.OpenBarDB, mainBranch, config, false)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
@@ -154,7 +179,7 @@ func initHardware(ctx context.Context, config *Config) (hardware.Hardware, error
 	return hw, nil
 }
 
-func connectToDB(ctx context.Context, database, branch string, config *Config) (*dbr.Connection, error) {
+func connectToDB(ctx context.Context, database, branch string, config *Config, multiStatements bool) (*dbr.Connection, error) {
 	if config.DB.Host == nil || *config.DB.Host == "" {
 		return nil, fmt.Errorf("no database host specified")
 	} else if config.DB.User == nil || *config.DB.User == "" {
@@ -164,11 +189,12 @@ func connectToDB(ctx context.Context, database, branch string, config *Config) (
 	}
 
 	params := &db.ConnParams{
-		Host:   *config.DB.Host,
-		User:   *config.DB.User,
-		Port:   *config.DB.Port,
-		DbName: database,
-		Branch: branch,
+		Host:            *config.DB.Host,
+		User:            *config.DB.User,
+		Port:            *config.DB.Port,
+		DbName:          database,
+		Branch:          branch,
+		MultiStatements: multiStatements,
 	}
 
 	if config.DB.Pass != nil && *config.DB.Pass != "" {
