@@ -66,6 +66,8 @@ func NewDBSuite(database, branch, schemaDir, dbDir string) *DBSuite {
 }
 
 func (s *DBSuite) SetupSuite() {
+	// copy our database dir to a new directory so that any chunks written during the test, even
+	// if they are rolled back, will not be in the git diff.
 	if s.DbDir != "" {
 		newDbDir := s.T().TempDir()
 		err := cp.Copy(s.DbDir, newDbDir)
@@ -113,7 +115,6 @@ func (s *DBSuite) SetupSuite() {
 	}
 
 	s.Hash = bh.Hash
-	//s.LogWorking(tx)
 }
 
 func (s *DBSuite) TearDownSuite() {
