@@ -1,3 +1,4 @@
+.DS_Store
 cmd/openbar-server/debugconfig.yaml
 .idea
 .sqlhistory
