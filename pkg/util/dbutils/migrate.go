@@ -1,6 +1,7 @@
 package dbutils
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gocraft/dbr/v2"
 	"github.com/golang-migrate/migrate/v4"
@@ -36,13 +37,13 @@ func MigrateUp(conn *dbr.Connection, database, migrationSchemaDir string) error 
 		}
 
 		absPath, _ := filepath.Abs(migrationSchemaDir)
-		migrate, err := migrate.NewWithDatabaseInstance("file://"+absPath, database, driver)
+		m, err := migrate.NewWithDatabaseInstance("file://"+absPath, database, driver)
 		if err != nil {
 			return fmt.Errorf("failed to create migration instance: %w", err)
 		}
 
-		err = migrate.Up()
-		if err != nil {
+		err = m.Up()
+		if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 			return err
 		}
 	}
