@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,8 +22,7 @@ import (
 )
 
 const (
-	mainBranch       = "main"
-	migrationsDirArg = "migration-dir"
+	mainBranch = "main"
 )
 
 func installSignalHandler(cancelCtx context.CancelFunc) {
@@ -42,11 +40,8 @@ func installSignalHandler(cancelCtx context.CancelFunc) {
 }
 
 func main() {
-	migrationsDir := flag.String(migrationsDirArg, "", "run migrations")
-	flag.Parse()
-
-	if flag.NArg() == 0 {
-		log.Fatal("Usage: openbar-server [-migration-dir=<migration_file_dir>] <config file>")
+	if len(os.Args) != 2 {
+		log.Fatal("Usage: openbar-server <config file>")
 	}
 
 	ctx := context.Background()
@@ -58,19 +53,18 @@ func main() {
 
 	ctx, cancelCtx := context.WithCancel(ctx)
 
-	configFile := flag.Args()[0]
+	configFile := os.Args[1]
 	config, err := ReadConfig(configFile, logger)
 	if err != nil {
 		log.Fatal("Failed to read " + configFile + " - " + err.Error())
 	}
 
-	if migrationsDir != nil && len(*migrationsDir) > 0 {
-		err := runMigrations(ctx, *migrationsDir, config)
+	if len(config.MigrationDir) > 0 {
+		err := runMigrations(ctx, config.MigrationDir, config)
 		if err != nil {
 			log.Fatal(fmt.Printf("Failed to run migrations: %s", err.Error()))
 		} else {
 			log.Printf("Successfully ran migrations")
-			os.Exit(0)
 		}
 	}
 
@@ -168,6 +162,18 @@ func initHardware(ctx context.Context, config *Config) (hardware.Hardware, error
 		hw, err = hardware.NewDebugHardware(dbgConfig.NumPumps, dbgConfig.OutFile)
 		if err != nil {
 			return nil, fmt.Errorf("error creating debug hardware: %w", err)
+		}
+	case config.Hardware.Gpio != nil:
+		gpioConfig := config.Hardware.Gpio
+		hw, err = hardware.NewGpioHardware(gpioConfig.Pins)
+		if err != nil {
+			return nil, fmt.Errorf("error creating GPIO hardware: %w", err)
+		}
+
+	case config.Hardware.Sequent != nil:
+		hw, err = hardware.NewSR8Hardware()
+		if err != nil {
+			return nil, fmt.Errorf("error creating sequent hardware: %w", err)
 		}
 	}
 

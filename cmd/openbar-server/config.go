@@ -16,13 +16,13 @@ type GpioHardwareConfig struct {
 	Pins []int `yaml:"pins"`
 }
 
-type SpiHardwareConfig struct {
+type SequentHardwareConfig struct {
 }
 
 type HardwareConfig struct {
-	Debug *DebugHardwareConfig `yaml:"debug"`
-	Gpio  *GpioHardwareConfig  `yaml:"gpio"`
-	Spi   *SpiHardwareConfig   `yaml:"spi"`
+	Debug   *DebugHardwareConfig   `yaml:"debug"`
+	Gpio    *GpioHardwareConfig    `yaml:"gpio"`
+	Sequent *SequentHardwareConfig `yaml:"sequent"`
 }
 
 type DBConfig struct {
@@ -58,6 +58,7 @@ type Config struct {
 	DB           *DBConfig       `yaml:"db"`
 	CocktailsApi *ListenerConfig `yaml:"cocktails-api"`
 	OpenBarApi   *ListenerConfig `yaml:"openbar-api"`
+	MigrationDir string          `yaml:"migration-dir"`
 }
 
 func ReadConfig(filename string, logger *zap.Logger) (*Config, error) {

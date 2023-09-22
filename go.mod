@@ -3,6 +3,7 @@ module github.com/cocktailrobots/openbar-server
 go 1.19
 
 require (
+	github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc
 	github.com/dolthub/driver v0.0.0-20230817202733-930d981c0c45
 	github.com/gbin/goncurses v0.0.0-20141106211150-34d9399fcea5
 	github.com/go-sql-driver/mysql v1.7.2-0.20230713085235-0b18dac46f7f
@@ -12,6 +13,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/otiai10/copy v1.12.0
 	github.com/stretchr/testify v1.8.3
+	github.com/warthog618/gpiod v0.8.2
 	go.uber.org/zap v1.25.0
 	golang.org/x/sync v0.3.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -40,6 +42,7 @@ require (
 	github.com/bcicen/jstream v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1 // indirect
 	github.com/dolthub/dolt/go v0.40.5-0.20230817060035-80e1a646b0fb // indirect

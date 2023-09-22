@@ -54,11 +54,3 @@ func TurnPumpsOff(h Hardware) error {
 
 	return nil
 }
-
-// GpioHardware is the hardware implementation for the Raspberry Pi GPIO pins
-type GpioHardware struct {
-}
-
-// SpiHardware is the hardware implementation for the Raspberry Pi SPI pins
-type SpiHardware struct {
-}
