@@ -25,6 +25,22 @@ type HardwareConfig struct {
 	Sequent *SequentHardwareConfig `yaml:"sequent"`
 }
 
+type KeyboardButtonConfig struct {
+	NumButtons int `yaml:"num-buttons"`
+}
+
+type GpioButtonConfig struct {
+	Pins          []int `yaml:"pins"`
+	DebounceNanos int64 `yaml:"debounce-duration"`
+	ActiveLow     bool  `yaml:"active-low"`
+	PullUp        bool  `yaml:"pull-up"`
+}
+
+type ButtonConfig struct {
+	Keyboard *KeyboardButtonConfig `yaml:"keyboard"`
+	Gpio     *GpioButtonConfig     `yaml:"gpio"`
+}
+
 type DBConfig struct {
 	Host *string `yaml:"host"`
 	Port *int    `yaml:"port"`
@@ -55,6 +71,7 @@ func (c *ListenerConfig) GetPort() int {
 
 type Config struct {
 	Hardware     *HardwareConfig `yaml:"hardware"`
+	Buttons      *ButtonConfig   `yaml:"buttons"`
 	DB           *DBConfig       `yaml:"db"`
 	CocktailsApi *ListenerConfig `yaml:"cocktails-api"`
 	OpenBarApi   *ListenerConfig `yaml:"openbar-api"`

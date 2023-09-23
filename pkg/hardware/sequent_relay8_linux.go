@@ -60,6 +60,7 @@ type relay8Board struct {
 }*/
 
 type SequentRelay8Hardware struct {
+	mu     *sync.Mutex
 	boards []relay8Board
 }
 
@@ -82,7 +83,10 @@ func NewSR8Hardware() (*SequentRelay8Hardware, error) {
 		return nil, fmt.Errorf("no relay8 boards found")
 	}
 
-	return &SequentRelay8Hardware{boards: relay8s}, nil
+	return &SequentRelay8Hardware{
+		mu:     &sync.Mutex{},
+		boards: relay8s,
+	}, nil
 }
 
 func (s *SequentRelay8Hardware) Name() string {
@@ -108,6 +112,9 @@ func (s *SequentRelay8Hardware) Pump(idx int, state PumpState) error {
 		return fmt.Errorf("invalid pump index %d", idx)
 	}
 
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	boardIdx := idx / 8
 	pumpIdx := idx % 8
 
@@ -118,6 +125,9 @@ func (s *SequentRelay8Hardware) Pump(idx int, state PumpState) error {
 }
 
 func (s *SequentRelay8Hardware) Update(logger *zap.Logger) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	for i := range s.boards {
 		board := s.boards[i]
 		err := sequent.UpdateBoard(board.dev, board.state, 10)

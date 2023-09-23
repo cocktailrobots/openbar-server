@@ -2,7 +2,7 @@ package hardware
 
 import (
 	"fmt"
-	"strings"
+	"sync"
 	"time"
 
 	"github.com/warthog618/gpiod"
@@ -24,6 +24,7 @@ func (p pump) String() string {
 
 // GpioHardware is the hardware implementation for the Raspberry Pi GPIO pins
 type GpioHardware struct {
+	mu    *sync.Mutex
 	pumps []pump
 }
 
@@ -44,6 +45,7 @@ func NewGpioHardware(pins []int) (*GpioHardware, error) {
 	}
 
 	return &GpioHardware{
+		mu:    &sync.Mutex{},
 		pumps: pumps,
 	}, nil
 }
@@ -73,6 +75,9 @@ func (g GpioHardware) Pump(idx int, state PumpState) error {
 		return fmt.Errorf("invalid pump index %d", idx)
 	}
 
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
 	p := g.pumps[idx]
 	var err error
 	switch state {
@@ -96,10 +101,4 @@ func (g GpioHardware) Pump(idx int, state PumpState) error {
 }
 
 func (g GpioHardware) Update(logger *zap.Logger) {
-	var strs []string
-	for i, p := range g.pumps {
-		strs = append(strs, fmt.Sprintf(`"pump_%d": "%s"`, i, p.String()))
-	}
-
-	logger.Info("GpioHardware Update", zap.String("state", strings.Join(strs, ", ")))
 }

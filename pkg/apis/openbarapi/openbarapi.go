@@ -2,6 +2,7 @@ package openbarapi
 
 import (
 	"github.com/cocktailrobots/openbar-server/pkg/apis"
+	"github.com/cocktailrobots/openbar-server/pkg/hardware"
 	"github.com/cocktailrobots/openbar-server/pkg/util/dbutils"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -9,11 +10,13 @@ import (
 
 type OpenBarAPI struct {
 	*apis.API
+	hw hardware.Hardware
 }
 
-func New(logger *zap.Logger, txp dbutils.TxProvider, rtr *mux.Router) *OpenBarAPI {
+func New(logger *zap.Logger, txp dbutils.TxProvider, rtr *mux.Router, hw hardware.Hardware) *OpenBarAPI {
 	api := &OpenBarAPI{
 		API: apis.NewAPI(logger, txp, rtr),
+		hw:  hw,
 	}
 
 	rtr.HandleFunc("/fluids", api.FluidsHandler)

@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cocktailrobots/openbar-server/pkg/buttons"
+	"golang.design/x/hotkey/mainthread"
 	"log"
 	"net/http"
 	"os"
@@ -114,18 +116,6 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 		return fmt.Errorf("failed to create logger: %w", err)
 	}
 
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-			}
-			hw.Update(logger)
-			time.Sleep(100 * time.Millisecond)
-		}
-	}()
-
 	cockDBP, err := dbutils.NewDBProvider(cockConn, db.CocktailsDB+"/"+mainBranch, "")
 	if err != nil {
 		return fmt.Errorf("failed to initialize database '%s' provider: %w", db.CocktailsDB, err)
@@ -139,7 +129,7 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 	var eg errgroup.Group
 	eg.Go(func() error {
 		rtr := mux.NewRouter()
-		openbarapi.New(logger, openbarDBP, rtr)
+		openbarapi.New(logger, openbarDBP, rtr, hw)
 		return startHttpServer(ctx, config.OpenBarApi, rtr)
 	})
 
@@ -149,7 +139,78 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 		return startHttpServer(ctx, config.CocktailsApi, rtr)
 	})
 
-	return eg.Wait()
+	mainthread.Init(func() {
+		// Need to pull in any defer calls from the outside in as any code run outside of mainthread.Init will not be
+		// able to run after the main thread is closed.
+		defer cockConn.Close()
+		defer openBarConn.Close()
+		defer func() {
+			hardware.TurnPumpsOff(hw)
+			hw.Close()
+		}()
+
+		btns, err := initButtons(ctx, config)
+		if err != nil {
+			logger.Fatal("Failed to initialize buttons", zap.Error(err))
+			return
+		}
+		defer btns.Close()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			err = btns.Update()
+			if err != nil {
+				log.Println("Error updating buttons: ", err.Error())
+			} else {
+				for i := 0; i < btns.NumButtons(); i++ {
+					if btns.IsPressed(i) {
+						err = hw.Pump(i, hardware.Forward)
+					} else {
+						err = hw.Pump(i, hardware.Off)
+					}
+
+					if err != nil {
+						log.Println("Error pumping: ", err.Error())
+					}
+				}
+			}
+
+			hw.Update(logger)
+			time.Sleep(100 * time.Millisecond)
+		}
+	})
+
+	return nil
+}
+
+func initButtons(ctx context.Context, config *Config) (buttons.Buttons, error) {
+	if config.Buttons != nil {
+		switch {
+		case config.Buttons.Keyboard != nil:
+			btns, err := buttons.NewKeyboardButtons(ctx, config.Buttons.Keyboard.NumButtons)
+			if err != nil {
+				return nil, fmt.Errorf("error creating keyboard buttons: %w", err)
+			}
+
+			return btns, nil
+
+		case config.Buttons.Gpio != nil:
+			gpioConfig := config.Buttons.Gpio
+			btns, err := buttons.NewGpioButtons(gpioConfig.Pins, time.Duration(gpioConfig.DebounceNanos), gpioConfig.ActiveLow, gpioConfig.PullUp)
+			if err != nil {
+				return nil, fmt.Errorf("error creating GPIO buttons: %w", err)
+			}
+
+			return btns, nil
+		}
+	}
+
+	return buttons.NewNullButtons(), nil
 }
 
 func initHardware(ctx context.Context, config *Config) (hardware.Hardware, error) {
