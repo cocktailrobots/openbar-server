@@ -2,10 +2,12 @@ package hardware
 
 import (
 	"fmt"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/cocktailrobots/openbar-server/pkg/hardware/sequent"
 	"github.com/d2r2/go-i2c"
-	"log"
-	"time"
 )
 
 type relay8Board struct {
@@ -117,6 +119,7 @@ func (s *SequentRelay8Hardware) Pump(idx int, state PumpState) error {
 	defer s.mu.Unlock()
 
 	s.pump(idx, state)
+	return nil
 }
 
 func (s *SequentRelay8Hardware) pump(idx int, state PumpState) error {
@@ -128,9 +131,9 @@ func (s *SequentRelay8Hardware) pump(idx int, state PumpState) error {
 	pumpIdx := idx % 8
 
 	currOn := s.boards[boardIdx].state.Get(pumpIdx)
-	newOn := state != Off
+	//newOn := state != Off
 
-	if currOn != newOn {
+	if currOn != state {
 		now := time.Now()
 		s.runTimes[idx] += now.Sub(s.stateChangedAt[idx])
 		s.stateChangedAt[idx] = now
@@ -146,7 +149,7 @@ func (s *SequentRelay8Hardware) Update() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.update(logger)
+	s.update()
 }
 
 func (s *SequentRelay8Hardware) update() {
@@ -170,5 +173,5 @@ func (s *SequentRelay8Hardware) RunForTimes(times []time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	runForTimes(s, times)
+	return runForTimes(s, times)
 }

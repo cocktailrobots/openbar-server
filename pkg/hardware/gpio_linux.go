@@ -90,8 +90,8 @@ func (g *GpioHardware) pump(idx int, state PumpState) error {
 	defer g.mu.Unlock()
 
 	now := time.Now()
-	if g.state == Forward && state != Forward {
-		g.runTimes[idx] += now.Sub(g.updatedAt)
+	if g.pumps[i].state == Forward && state != Forward {
+		g.runTimes[idx] += now.Sub(g.pumps[idx].updatedAt)
 	}
 
 	p := g.pumps[idx]

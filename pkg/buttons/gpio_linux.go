@@ -1,12 +1,14 @@
 package buttons
 
 import (
-	"github.com/warthog618/gpiod"
+	"fmt"
 	"time"
+
+	"github.com/warthog618/gpiod"
 )
 
 type GpioButtons struct {
-	lines []gpiod.Line
+	lines []*gpiod.Line
 }
 
 func NewGpioButtons(pins []int, debounceDur time.Duration, activeLow, pullUp bool) (*GpioButtons, error) {
@@ -27,7 +29,7 @@ func NewGpioButtons(pins []int, debounceDur time.Duration, activeLow, pullUp boo
 		options = append(options, gpiod.WithDebounce(debounceDur))
 	}
 
-	var lines []gpiod.Line
+	var lines []*gpiod.Line
 	for _, pin := range pins {
 		l, err := gpiod.RequestLine("gpiochip0", int(pin), options...)
 		if err != nil {
