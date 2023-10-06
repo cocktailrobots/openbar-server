@@ -84,7 +84,7 @@ func NewSR8Hardware(expBoardCount int) (*SequentRelay8Hardware, error) {
 		})
 	}
 
-	if len(relay8s) == expBoardCount {
+	if len(relay8s) != expBoardCount {
 		return nil, fmt.Errorf("%d relay8 boards found. %d expected", len(relay8s), expBoardCount)
 	}
 
