@@ -49,7 +49,12 @@ func (g GpioButtons) NumButtons() int {
 }
 
 func (g GpioButtons) IsPressed(idx int) bool {
-	return g.lines[idx].Value() == 1
+	val, err := g.lines[idx].Value()
+	if err != nil {
+		panic(err)
+	}
+
+	return val == 1
 }
 
 func (g GpioButtons) Update() error {

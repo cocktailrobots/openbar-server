@@ -130,8 +130,8 @@ func (s *SequentRelay8Hardware) pump(idx int, state PumpState) error {
 	boardIdx := idx / 8
 	pumpIdx := idx % 8
 
-	currOn := s.boards[boardIdx].state.Get(pumpIdx)
-	//newOn := state != Off
+	currOn := bool(s.boards[boardIdx].state.Get(pumpIdx))
+	newOn := state != Off
 
 	if currOn != state {
 		now := time.Now()
