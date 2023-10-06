@@ -40,6 +40,6 @@ func (s *SequentRelay8Hardware) RunForTimes(times []time.Duration) error {
 	return nil
 }
 
-func NewSR8Hardware() (*SequentRelay8Hardware, error) {
+func NewSR8Hardware(expBoardCount int) (*SequentRelay8Hardware, error) {
 	return &SequentRelay8Hardware{}, nil
 }

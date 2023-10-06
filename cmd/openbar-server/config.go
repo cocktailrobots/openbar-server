@@ -17,6 +17,7 @@ type GpioHardwareConfig struct {
 }
 
 type SequentHardwareConfig struct {
+	ExpectedBoardCount int `yaml:"expected-board-count"`
 }
 
 type HardwareConfig struct {

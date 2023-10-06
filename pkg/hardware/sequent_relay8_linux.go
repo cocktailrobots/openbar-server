@@ -67,7 +67,7 @@ type SequentRelay8Hardware struct {
 	stateChangedAt []time.Time
 }
 
-func NewSR8Hardware() (*SequentRelay8Hardware, error) {
+func NewSR8Hardware(expBoardCount int) (*SequentRelay8Hardware, error) {
 	var relay8s []relay8Board
 	for i := byte(0); i < 8; i++ {
 		dev, err := sequent.InitBoard(i)
@@ -82,8 +82,8 @@ func NewSR8Hardware() (*SequentRelay8Hardware, error) {
 		})
 	}
 
-	if len(relay8s) == 0 {
-		return nil, fmt.Errorf("no relay8 boards found")
+	if len(relay8s) == expBoardCount {
+		return nil, fmt.Errorf("%d relay8 boards found. %d expected", len(relay8s), expBoardCount)
 	}
 
 	return &SequentRelay8Hardware{

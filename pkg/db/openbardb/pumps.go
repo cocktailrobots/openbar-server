@@ -36,26 +36,21 @@ func ListPumps(ctx context.Context, tx *dbr.Tx) ([]Pump, error) {
 }
 
 func UpdatePumps(ctx context.Context, tx *dbr.Tx, pumps []Pump) error {
-	_, err := tx.DeleteFrom(PumpsTable).ExecContext(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to clear pumps: %w", err)
-	}
-
-	ins := tx.InsertInto(PumpsTable).Columns("idx", "ml_per_sec")
+	ins := tx.InsertInto(PumpsTable).Ignore().Columns("idx", "ml_per_sec")
 	for i := range pumps {
 		ins.Record(&pumps[i])
 	}
 
-	res, err := ins.ExecContext(ctx)
+	_, err := ins.ExecContext(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to insert pumps: %w", err)
 	}
 
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to get rows affected: %w", err)
-	} else if rowsAffected != int64(len(pumps)) {
-		return fmt.Errorf("failed to insert all pumps: %w", err)
+	for i := range pumps {
+		_, err := tx.Update(PumpsTable).Set("ml_per_sec", pumps[i].MlPerSec).Where(dbr.Eq(idxCol, pumps[i].Idx)).ExecContext(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

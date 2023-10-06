@@ -119,6 +119,17 @@ $ openbar-server
 
 ## Configuring openbar-server
 
+
+
+```bash
+sudo bash
+mkdir /etc/openbar-server
+cd /etc/openbar-server
+vim config.yaml
+```
+
+
+
 ## Enabling Android USB Tethering
 
 Add to `/etc/dhcpcd.conf`

@@ -101,7 +101,7 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 	}
 	defer openBarConn.Close()
 
-	hw, err := initHardware(ctx, config)
+	hw, err := initHardware(ctx, config, logger)
 	if err != nil {
 		return fmt.Errorf("failed to initialize hardware: %w", err)
 	}
@@ -149,7 +149,7 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 			hw.Close()
 		}()
 
-		btns, err := initButtons(ctx, config)
+		btns, err := initButtons(ctx, config, logger)
 		if err != nil {
 			logger.Fatal("Failed to initialize buttons", zap.Error(err))
 			return
@@ -188,10 +188,11 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 	return nil
 }
 
-func initButtons(ctx context.Context, config *Config) (buttons.Buttons, error) {
+func initButtons(ctx context.Context, config *Config, logger *zap.Logger) (buttons.Buttons, error) {
 	if config.Buttons != nil {
 		switch {
 		case config.Buttons.Keyboard != nil:
+			logger.Info("Creating keyboard buttons")
 			btns, err := buttons.NewKeyboardButtons(ctx, config.Buttons.Keyboard.NumButtons)
 			if err != nil {
 				return nil, fmt.Errorf("error creating keyboard buttons: %w", err)
@@ -200,6 +201,7 @@ func initButtons(ctx context.Context, config *Config) (buttons.Buttons, error) {
 			return btns, nil
 
 		case config.Buttons.Gpio != nil:
+			logger.Info("Creating GPIO buttons")
 			gpioConfig := config.Buttons.Gpio
 			btns, err := buttons.NewGpioButtons(gpioConfig.Pins, time.Duration(gpioConfig.DebounceNanos), gpioConfig.ActiveLow, gpioConfig.PullUp)
 			if err != nil {
@@ -213,7 +215,7 @@ func initButtons(ctx context.Context, config *Config) (buttons.Buttons, error) {
 	return buttons.NewNullButtons(), nil
 }
 
-func initHardware(ctx context.Context, config *Config) (hardware.Hardware, error) {
+func initHardware(ctx context.Context, config *Config, logger *zap.Logger) (hardware.Hardware, error) {
 	var hw hardware.Hardware
 	var err error
 
@@ -222,12 +224,14 @@ func initHardware(ctx context.Context, config *Config) (hardware.Hardware, error
 	} else {
 		switch {
 		case config.Hardware.Debug != nil:
+			logger.Info("Creating debug hardware")
 			dbgConfig := config.Hardware.Debug
 			hw, err = hardware.NewDebugHardware(dbgConfig.NumPumps, dbgConfig.OutFile)
 			if err != nil {
 				return nil, fmt.Errorf("error creating debug hardware: %w", err)
 			}
 		case config.Hardware.Gpio != nil:
+			logger.Info("Creating GPIO hardware")
 			gpioConfig := config.Hardware.Gpio
 			hw, err = hardware.NewGpioHardware(gpioConfig.Pins)
 			if err != nil {
@@ -235,7 +239,9 @@ func initHardware(ctx context.Context, config *Config) (hardware.Hardware, error
 			}
 
 		case config.Hardware.Sequent != nil:
-			hw, err = hardware.NewSR8Hardware()
+			logger.Info("Creating sequent hardware")
+			sequentConfig := config.Hardware.Sequent
+			hw, err = hardware.NewSR8Hardware(sequentConfig.ExpectedBoardCount)
 			if err != nil {
 				return nil, fmt.Errorf("error creating sequent hardware: %w", err)
 			}
