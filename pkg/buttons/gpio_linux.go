@@ -6,7 +6,7 @@ import (
 )
 
 type GpioButtons struct {
-	[]gpiod.Line
+	lines []gpiod.Line
 }
 
 func NewGpioButtons(pins []int, debounceDur time.Duration, activeLow, pullUp bool) (*GpioButtons, error) {
