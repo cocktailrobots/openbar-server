@@ -133,7 +133,7 @@ func (s *SequentRelay8Hardware) pump(idx int, state PumpState) error {
 	currOn := bool(s.boards[boardIdx].state.Get(pumpIdx))
 	newOn := state != Off
 
-	if currOn != state {
+	if currOn != newOn {
 		now := time.Now()
 		s.runTimes[idx] += now.Sub(s.stateChangedAt[idx])
 		s.stateChangedAt[idx] = now
