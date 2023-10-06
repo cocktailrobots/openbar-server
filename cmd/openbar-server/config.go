@@ -26,10 +26,6 @@ type HardwareConfig struct {
 	Sequent *SequentHardwareConfig `yaml:"sequent"`
 }
 
-type KeyboardButtonConfig struct {
-	NumButtons int `yaml:"num-buttons"`
-}
-
 type GpioButtonConfig struct {
 	Pins          []int `yaml:"pins"`
 	DebounceNanos int64 `yaml:"debounce-duration"`
@@ -38,8 +34,7 @@ type GpioButtonConfig struct {
 }
 
 type ButtonConfig struct {
-	Keyboard *KeyboardButtonConfig `yaml:"keyboard"`
-	Gpio     *GpioButtonConfig     `yaml:"gpio"`
+	Gpio *GpioButtonConfig `yaml:"gpio"`
 }
 
 type DBConfig struct {

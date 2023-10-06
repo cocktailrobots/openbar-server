@@ -102,8 +102,6 @@ Bye
 `PATH=$PATH:/usr/local/go/bin:~/go/bin`
 
 `sudo apt install git`
-`sudo apt install libx11-dev`
-`sudo apt install -y xvfb`
 `sudo apt install libncurses5-dev`
 
 `git clone https://github.com/cocktailrobots/openbar-server.git`

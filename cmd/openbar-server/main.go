@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/buttons"
-	"golang.design/x/hotkey/mainthread"
 	"log"
 	"net/http"
 	"os"
@@ -101,6 +100,12 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 	}
 	defer openBarConn.Close()
 
+	btns, err := initButtons(ctx, config, logger)
+	if err != nil {
+		logger.Fatal("Failed to initialize buttons", zap.Error(err))
+	}
+	defer btns.Close()
+
 	hw, err := initHardware(ctx, config, logger)
 	if err != nil {
 		return fmt.Errorf("failed to initialize hardware: %w", err)
@@ -139,51 +144,33 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 		return startHttpServer(ctx, config.CocktailsApi, rtr)
 	})
 
-	mainthread.Init(func() {
-		// Need to pull in any defer calls from the outside in as any code run outside of mainthread.Init will not be
-		// able to run after the main thread is closed.
-		defer cockConn.Close()
-		defer openBarConn.Close()
-		defer func() {
-			hardware.TurnPumpsOff(hw)
-			hw.Close()
-		}()
-
-		btns, err := initButtons(ctx, config, logger)
-		if err != nil {
-			logger.Fatal("Failed to initialize buttons", zap.Error(err))
-			return
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
 		}
-		defer btns.Close()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-			}
+		err = btns.Update()
+		if err != nil {
+			log.Println("Error updating buttons: ", err.Error())
+		} else {
+			for i := 0; i < btns.NumButtons(); i++ {
+				if btns.IsPressed(i) {
+					err = hw.Pump(i, hardware.Forward)
+				} else {
+					err = hw.Pump(i, hardware.Off)
+				}
 
-			err = btns.Update()
-			if err != nil {
-				log.Println("Error updating buttons: ", err.Error())
-			} else {
-				for i := 0; i < btns.NumButtons(); i++ {
-					if btns.IsPressed(i) {
-						err = hw.Pump(i, hardware.Forward)
-					} else {
-						err = hw.Pump(i, hardware.Off)
-					}
-
-					if err != nil {
-						log.Println("Error pumping: ", err.Error())
-					}
+				if err != nil {
+					log.Println("Error pumping: ", err.Error())
 				}
 			}
-
-			hw.Update()
-			time.Sleep(100 * time.Millisecond)
 		}
-	})
+
+		hw.Update()
+		time.Sleep(100 * time.Millisecond)
+	}
 
 	return nil
 }
@@ -191,15 +178,6 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 func initButtons(ctx context.Context, config *Config, logger *zap.Logger) (buttons.Buttons, error) {
 	if config.Buttons != nil {
 		switch {
-		case config.Buttons.Keyboard != nil:
-			logger.Info("Creating keyboard buttons")
-			btns, err := buttons.NewKeyboardButtons(ctx, config.Buttons.Keyboard.NumButtons)
-			if err != nil {
-				return nil, fmt.Errorf("error creating keyboard buttons: %w", err)
-			}
-
-			return btns, nil
-
 		case config.Buttons.Gpio != nil:
 			logger.Info("Creating GPIO buttons")
 			gpioConfig := config.Buttons.Gpio

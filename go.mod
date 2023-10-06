@@ -16,7 +16,6 @@ require (
 	github.com/stretchr/testify v1.8.3
 	github.com/warthog618/gpiod v0.8.2
 	go.uber.org/zap v1.25.0
-	golang.design/x/hotkey v0.4.1
 	golang.org/x/sync v0.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -103,7 +102,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.design/x/mainthread v0.3.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
