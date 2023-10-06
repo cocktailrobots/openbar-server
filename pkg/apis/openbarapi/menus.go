@@ -20,8 +20,10 @@ func (api *OpenBarAPI) MenusHandler(w http.ResponseWriter, r *http.Request) {
 		api.GetMenus(ctx, w, r)
 	case http.MethodPost:
 		api.PostMenus(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodPost}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 
@@ -33,7 +35,15 @@ func (api *OpenBarAPI) GetMenus(ctx context.Context, w http.ResponseWriter, r *h
 		return err
 	})
 
-	api.Respond(w, r, menus, err)
+	if err != nil {
+		api.Respond(w, r, nil, err)
+	}
+
+	if menus == nil {
+		menus = []string{}
+	}
+
+	api.Respond(w, r, menus, nil)
 }
 
 func (api *OpenBarAPI) PostMenus(ctx context.Context, w http.ResponseWriter, r *http.Request) {
@@ -69,8 +79,10 @@ func (api *OpenBarAPI) MenuHandler(w http.ResponseWriter, r *http.Request) {
 		api.DeleteMenu(ctx, w, r)
 	case http.MethodPatch:
 		api.PatchMenu(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodDelete, http.MethodPatch}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 
@@ -158,8 +170,10 @@ func (api *OpenBarAPI) MenuRecipesHandler(w http.ResponseWriter, r *http.Request
 	switch r.Method {
 	case http.MethodGet:
 		api.GetMenuRecipes(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 
@@ -194,8 +208,10 @@ func (api *OpenBarAPI) MenuRecipeHandler(w http.ResponseWriter, r *http.Request)
 		api.DeleteRecipeFromMenuHandler(ctx, w, r)
 	case http.MethodPost:
 		api.AddRecipeToMenuHandler(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodDelete, http.MethodPost}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 

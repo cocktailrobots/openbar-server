@@ -19,6 +19,7 @@ func New(logger *zap.Logger, txp dbutils.TxProvider, rtr *mux.Router, hw hardwar
 		hw:  hw,
 	}
 
+	rtr.HandleFunc("/", api.DefaultHandler)
 	rtr.HandleFunc("/fluids", api.FluidsHandler)
 	rtr.HandleFunc("/config", api.ConfigHandler)
 	rtr.HandleFunc("/config/{key}", api.ConfigValueHandler)
@@ -26,6 +27,7 @@ func New(logger *zap.Logger, txp dbutils.TxProvider, rtr *mux.Router, hw hardwar
 	rtr.HandleFunc("/menus/{name}", api.MenuHandler)
 	rtr.HandleFunc("/menus/{name}/recipes", api.MenuRecipesHandler)
 	rtr.HandleFunc("/menus/{name}/recipes/{id}", api.MenuRecipeHandler)
+	rtr.HandleFunc("/make", api.MakeHandler)
 
 	return api
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+var ErrMethodNotAllowed = errors.New("method not allowed")
 var ErrNotFound = errors.New("not found")
 var ErrBadRequest = errors.New("bad request")
 var ErrAlreadyExists = errors.New("already exists")
@@ -43,10 +44,21 @@ func (api *API) Close() error {
 }
 
 func (api *API) DefaultHandler(w http.ResponseWriter, r *http.Request) {
+	api.Respond(w, r, nil, nil)
+}
 
+func (api *API) OptionsResponse(allowedMethods []string, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Allow", strings.Join(allowedMethods, ", "))
+	w.Header().Set("Access-Control-Allow-Methods", strings.Join(allowedMethods, ", "))
+	w.Header().Set("Access-Control-Allow-Headers", "content-type")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
 }
 
 func (api *API) Respond(w http.ResponseWriter, r *http.Request, respObj any, err error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
@@ -60,6 +72,9 @@ func (api *API) Respond(w http.ResponseWriter, r *http.Request, respObj any, err
 		} else if errors.Is(err, ErrAlreadyExists) {
 			w.WriteHeader(http.StatusConflict)
 			return
+		} else if errors.Is(err, ErrMethodNotAllowed) {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
 
 		var mysqlErr *mysql.MySQLError
@@ -70,9 +85,11 @@ func (api *API) Respond(w http.ResponseWriter, r *http.Request, respObj any, err
 
 		api.logger.Info("Error processing "+r.URL.Path, zap.String("url", r.URL.String()), zap.String("method", r.Method), zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
-	} else if respObj == nil {
-		w.WriteHeader(http.StatusOK)
 	} else {
+		if respObj == nil {
+			respObj = struct{}{}
+		}
+
 		jsonData, err := json.Marshal(respObj)
 		if err != nil {
 			api.logger.Info("Error marshaling response", zap.String("url", r.URL.String()), zap.String("method", r.Method), zap.Error(err))

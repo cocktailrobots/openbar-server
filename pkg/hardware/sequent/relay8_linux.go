@@ -36,6 +36,10 @@ func (r Relay8States) Set(idx int, state RelayState) Relay8States {
 	return r
 }
 
+func (r Relay8States) Get(idx int) RelayState {
+	return r[idx]
+}
+
 func (r Relay8States) Equal(other Relay8States) bool {
 	for i := range r {
 		if r[i] != other[i] {

@@ -7,8 +7,8 @@ import (
 
 // RecipeIngredient is a single ingredient in a recipe.
 type RecipeIngredient struct {
-	Name   string  `db:"name"`
-	Amount float64 `db:"amount"`
+	Name   string  `json:"name"`
+	Amount float64 `json:"amount"`
 }
 
 // Recipe is a recipe.

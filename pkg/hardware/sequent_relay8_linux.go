@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/hardware/sequent"
 	"github.com/d2r2/go-i2c"
-	"go.uber.org/zap"
+	"log"
+	"time"
 )
 
 type relay8Board struct {
@@ -60,8 +61,10 @@ type relay8Board struct {
 }*/
 
 type SequentRelay8Hardware struct {
-	mu     *sync.Mutex
-	boards []relay8Board
+	mu             *sync.Mutex
+	boards         []relay8Board
+	runTimes       []time.Duration
+	stateChangedAt []time.Time
 }
 
 func NewSR8Hardware() (*SequentRelay8Hardware, error) {
@@ -84,8 +87,10 @@ func NewSR8Hardware() (*SequentRelay8Hardware, error) {
 	}
 
 	return &SequentRelay8Hardware{
-		mu:     &sync.Mutex{},
-		boards: relay8s,
+		mu:             &sync.Mutex{},
+		boards:         relay8s,
+		runTimes:       make([]time.Duration, len(relay8s)*8),
+		stateChangedAt: make([]time.Time, len(relay8s)*8),
 	}, nil
 }
 
@@ -108,15 +113,28 @@ func (s *SequentRelay8Hardware) NumPumps() int {
 }
 
 func (s *SequentRelay8Hardware) Pump(idx int, state PumpState) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.pump(idx, state)
+}
+
+func (s *SequentRelay8Hardware) pump(idx int, state PumpState) error {
 	if idx < 0 || idx >= s.NumPumps() {
 		return fmt.Errorf("invalid pump index %d", idx)
 	}
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	boardIdx := idx / 8
 	pumpIdx := idx % 8
+
+	currOn := s.boards[boardIdx].state.Get(pumpIdx)
+	newOn := state != Off
+
+	if currOn != newOn {
+		now := time.Now()
+		s.runTimes[idx] += now.Sub(s.stateChangedAt[idx])
+		s.stateChangedAt[idx] = now
+	}
 
 	board := s.boards[boardIdx]
 	board.state = board.state.Set(pumpIdx, state != Off)
@@ -124,15 +142,33 @@ func (s *SequentRelay8Hardware) Pump(idx int, state PumpState) error {
 	return nil
 }
 
-func (s *SequentRelay8Hardware) Update(logger *zap.Logger) {
+func (s *SequentRelay8Hardware) Update() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	s.update(logger)
+}
+
+func (s *SequentRelay8Hardware) update() {
 	for i := range s.boards {
 		board := s.boards[i]
 		err := sequent.UpdateBoard(board.dev, board.state, 10)
 		if err != nil {
-			logger.Info("error updating board", zap.Uint8("board_idx", board.stack), zap.Error(err))
+			log.Println(fmt.Errorf("error updating board %d: %w", board.stack, err))
 		}
 	}
+}
+
+func (s *SequentRelay8Hardware) TimeRun(idx int) time.Duration {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.runTimes[idx]
+}
+
+func (s *SequentRelay8Hardware) RunForTimes(times []time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	runForTimes(s, times)
 }

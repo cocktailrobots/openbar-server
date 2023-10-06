@@ -180,7 +180,7 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 				}
 			}
 
-			hw.Update(logger)
+			hw.Update()
 			time.Sleep(100 * time.Millisecond)
 		}
 	})
@@ -217,24 +217,28 @@ func initHardware(ctx context.Context, config *Config) (hardware.Hardware, error
 	var hw hardware.Hardware
 	var err error
 
-	switch {
-	case config.Hardware.Debug != nil:
-		dbgConfig := config.Hardware.Debug
-		hw, err = hardware.NewDebugHardware(dbgConfig.NumPumps, dbgConfig.OutFile)
-		if err != nil {
-			return nil, fmt.Errorf("error creating debug hardware: %w", err)
-		}
-	case config.Hardware.Gpio != nil:
-		gpioConfig := config.Hardware.Gpio
-		hw, err = hardware.NewGpioHardware(gpioConfig.Pins)
-		if err != nil {
-			return nil, fmt.Errorf("error creating GPIO hardware: %w", err)
-		}
+	if config.Hardware == nil {
+		hw = hardware.NewTestHardware(8)
+	} else {
+		switch {
+		case config.Hardware.Debug != nil:
+			dbgConfig := config.Hardware.Debug
+			hw, err = hardware.NewDebugHardware(dbgConfig.NumPumps, dbgConfig.OutFile)
+			if err != nil {
+				return nil, fmt.Errorf("error creating debug hardware: %w", err)
+			}
+		case config.Hardware.Gpio != nil:
+			gpioConfig := config.Hardware.Gpio
+			hw, err = hardware.NewGpioHardware(gpioConfig.Pins)
+			if err != nil {
+				return nil, fmt.Errorf("error creating GPIO hardware: %w", err)
+			}
 
-	case config.Hardware.Sequent != nil:
-		hw, err = hardware.NewSR8Hardware()
-		if err != nil {
-			return nil, fmt.Errorf("error creating sequent hardware: %w", err)
+		case config.Hardware.Sequent != nil:
+			hw, err = hardware.NewSR8Hardware()
+			if err != nil {
+				return nil, fmt.Errorf("error creating sequent hardware: %w", err)
+			}
 		}
 	}
 

@@ -130,6 +130,16 @@ func mapRecipeIngredients(recipeIngredients []RecipeIngredient) map[string][]Rec
 	return recipeIdToIngredients
 }
 
+// ingListToMap takes a list of ingredients and turns it into a map of ingredient name to ingredient.
+func ingListToMap(ingredients []RecipeIngredient) map[string]RecipeIngredient {
+	ingMap := make(map[string]RecipeIngredient)
+	for i := range ingredients {
+		ingMap[ingredients[i].IngredientFk] = ingredients[i]
+	}
+
+	return ingMap
+}
+
 // GetRecipes returns all recipes, even if they are not available.
 func GetRecipes(ctx context.Context, tx *dbr.Tx) ([]Recipe, error) {
 	var recipes []Recipe
@@ -257,12 +267,11 @@ func UpdateRecipe(ctx context.Context, tx *dbr.Tx, recipe *Recipe) error {
 		return fmt.Errorf("failed to get current recipe ingredients: %w", err)
 	}
 
-	// create lists of added, changed, and deleted ingredients
-	deleted := make([]RecipeIngredient, len(currentRecipeIngredients))
-	copy(deleted, currentRecipeIngredients)
+	idToIngForNew := ingListToMap(recipe.Ingredients)
+	idToIngForCurr := ingListToMap(currentRecipeIngredients)
 
-	changed := []RecipeIngredient{}
-	added := []RecipeIngredient{}
+	var changed []RecipeIngredient
+	var added []RecipeIngredient
 
 	// loop over the ingredients from the new recipe comparing them to the current recipe ingredients.
 	// if the ingredient is not found in the current recipe ingredients, it is added.
@@ -271,29 +280,27 @@ func UpdateRecipe(ctx context.Context, tx *dbr.Tx, recipe *Recipe) error {
 	// if there is an ingredient in the current ingredients that is not found in the new recipe, it is deleted.
 	for i := range recipe.Ingredients {
 		name := strings.ToLower(recipe.Ingredients[i].IngredientFk)
-		found := false
-		differs := false
-		for j := len(currentRecipeIngredients) - 1; !found && j >= 0; j-- {
-			if currentRecipeIngredients[j].IngredientFk == name {
-				found = true
-				deleted = append(deleted[:j], deleted[j+1:]...)
-				differs = currentRecipeIngredients[j].Amount != recipe.Ingredients[i].Amount
-			}
-		}
+		currIng, found := idToIngForCurr[name]
 
 		if !found {
 			added = append(added, recipe.Ingredients[i])
-		} else if differs {
+		} else if currIng.Amount != recipe.Ingredients[i].Amount {
 			changed = append(changed, recipe.Ingredients[i])
 		} // if found but doesn't differ ignore
 	}
 
-	// if there are items to delete, delete them in the db
-	if len(deleted) > 0 {
-		deletedNames := make([]string, len(deleted))
-		for i := range deleted {
-			deletedNames[i] = deleted[i].IngredientFk
+	// create lists of added, changed, and deleted ingredients
+	deletedNames := make([]string, 0, len(currentRecipeIngredients))
+	for i := range currentRecipeIngredients {
+		name := strings.ToLower(currentRecipeIngredients[i].IngredientFk)
+		_, found := idToIngForNew[name]
+		if !found {
+			deletedNames = append(deletedNames, name)
 		}
+	}
+
+	// if there are items to delete, delete them in the db
+	if len(deletedNames) > 0 {
 		res, err := tx.DeleteFrom(recipeIngredientsTable).Where(
 			dbr.And(dbr.Eq(recipeIdFkCol, recipe.Id), dbr.Eq(ingredientFkCol, deletedNames)),
 		).ExecContext(ctx)
@@ -304,8 +311,8 @@ func UpdateRecipe(ctx context.Context, tx *dbr.Tx, recipe *Recipe) error {
 		affected, err := res.RowsAffected()
 		if err != nil {
 			return fmt.Errorf("failed to get rows affected: %w", err)
-		} else if affected != int64(len(deleted)) {
-			return fmt.Errorf("expected %d rows to be deleted, but %d were", len(deleted), affected)
+		} else if affected != int64(len(deletedNames)) {
+			return fmt.Errorf("expected %d rows to be deleted, but %d were", len(deletedNames), affected)
 		}
 	}
 

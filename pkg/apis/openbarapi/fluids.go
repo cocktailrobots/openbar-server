@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cocktailrobots/openbar-server/pkg/apis"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
 	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
 	"github.com/gocraft/dbr/v2"
@@ -15,12 +16,15 @@ import (
 func (api *OpenBarAPI) FluidsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		api.GetFluidsHandler(ctx, w, r)
-	} else if r.Method == http.MethodPost {
+	case http.MethodPost:
 		api.PostFluidsHandler(ctx, w, r)
-	} else {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodPost}, w, r)
+	default:
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 
@@ -30,7 +34,7 @@ func (api *OpenBarAPI) PostFluidsHandler(ctx context.Context, w http.ResponseWri
 	err := json.NewDecoder(r.Body).Decode(&fluidsReq)
 	if err != nil {
 		api.Logger().Info("Error decoding request", zap.String("url", r.URL.String()), zap.String("method", r.Method), zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
+		api.Respond(w, r, nil, apis.ErrBadRequest)
 		return
 	}
 

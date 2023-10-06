@@ -5,51 +5,9 @@ package buttons
 import (
 	"context"
 	"fmt"
+	"github.com/cocktailrobots/openbar-server/pkg/util"
 	"golang.design/x/hotkey"
-	"sync"
 )
-
-type safeBoolArray struct {
-	mu   *sync.Mutex
-	vals []bool
-}
-
-func NewSafeBoolArray(size int) *safeBoolArray {
-	return &safeBoolArray{
-		mu:   &sync.Mutex{},
-		vals: make([]bool, size),
-	}
-}
-
-func (s *safeBoolArray) Clear() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	for i := range s.vals {
-		s.vals[i] = false
-	}
-}
-
-func (s *safeBoolArray) Get(idx int) bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.vals[idx]
-}
-
-func (s *safeBoolArray) Set(idx int, val bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.vals[idx] = val
-}
-
-func (s *safeBoolArray) Len() int {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return len(s.vals)
-}
 
 var keycodes = []hotkey.Key{
 	hotkey.Key0,
@@ -92,7 +50,7 @@ var keycodes = []hotkey.Key{
 
 type KeyboardButtons struct {
 	hotkeys []*hotkey.Hotkey
-	down    *safeBoolArray
+	down    *util.SafeBoolArray
 }
 
 func NewKeyboardButtons(ctx context.Context, numButtons int) (*KeyboardButtons, error) {
@@ -101,7 +59,7 @@ func NewKeyboardButtons(ctx context.Context, numButtons int) (*KeyboardButtons, 
 	}
 
 	hotkeys := make([]*hotkey.Hotkey, numButtons)
-	down := NewSafeBoolArray(numButtons)
+	down := util.NewSafeBoolArray(numButtons)
 
 	for i := 0; i < numButtons; i++ {
 		hotkeys[i] = hotkey.New(nil, keycodes[i])

@@ -2,7 +2,9 @@
 
 package hardware
 
-import "go.uber.org/zap"
+import (
+	"time"
+)
 
 type SequentRelay8Hardware struct {
 }
@@ -23,7 +25,19 @@ func (s *SequentRelay8Hardware) Pump(idx int, state PumpState) error {
 	return nil
 }
 
-func (s *SequentRelay8Hardware) Update(*zap.Logger) {
+func (s *SequentRelay8Hardware) pump(idx int, state PumpState) error {
+	return nil
+}
+
+func (s *SequentRelay8Hardware) Update() {}
+func (s *SequentRelay8Hardware) update() {}
+
+func (s *SequentRelay8Hardware) TimeRun(idx int) time.Duration {
+	return 0
+}
+
+func (s *SequentRelay8Hardware) RunForTimes(times []time.Duration) error {
+	return nil
 }
 
 func NewSR8Hardware() (*SequentRelay8Hardware, error) {

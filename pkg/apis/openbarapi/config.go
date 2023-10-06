@@ -19,8 +19,10 @@ func (api *OpenBarAPI) ConfigHandler(w http.ResponseWriter, r *http.Request) {
 		api.getConfig(ctx, w, r)
 	case http.MethodPost:
 		api.setConfig(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodPost}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 
@@ -72,8 +74,10 @@ func (api *OpenBarAPI) ConfigValueHandler(w http.ResponseWriter, r *http.Request
 		api.setConfigValue(ctx, w, r)
 	case http.MethodDelete:
 		api.deleteConfigValue(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodPatch, http.MethodPost, http.MethodDelete}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 

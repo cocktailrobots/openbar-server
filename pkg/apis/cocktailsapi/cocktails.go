@@ -21,8 +21,10 @@ func (api *CocktailsAPI) CocktailsHandler(w http.ResponseWriter, r *http.Request
 		api.ListCocktailsHandler(ctx, w, r)
 	case http.MethodPost:
 		api.PostCocktailsHandler(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodPost}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 
@@ -74,14 +76,17 @@ func (api *CocktailsAPI) PostCocktailsHandler(ctx context.Context, w http.Respon
 func (api *CocktailsAPI) CocktailHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		api.GetCocktailsHandler(ctx, w, r)
-	} else if r.Method == http.MethodPatch {
+	case http.MethodPatch:
 		api.UpdateCocktailHandler(ctx, w, r)
-	} else if r.Method == http.MethodDelete {
+	case http.MethodDelete:
 		api.DeleteCocktailHandler(ctx, w, r)
-	} else {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodPatch, http.MethodDelete, http.MethodGet}, w, r)
+	default:
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 

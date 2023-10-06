@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/cocktailrobots/openbar-server/pkg/util/ncurses"
 	"github.com/gbin/goncurses"
-	"go.uber.org/zap"
 	"log"
 	"os"
 	"strconv"
@@ -17,37 +16,9 @@ type stateChange struct {
 	changedAt time.Time
 }
 
-type stateChanges struct {
-	mu      *sync.Mutex
-	changes []stateChange
-}
-
-func NewStateChanges(initialVals []stateChange) stateChanges {
-	return stateChanges{
-		mu:      &sync.Mutex{},
-		changes: initialVals,
-	}
-}
-
-func (s *stateChanges) GetState(pumpNum int) stateChange {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.changes[pumpNum]
-}
-
-func (s *stateChanges) SetState(pumpNum int, state PumpState) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.changes[pumpNum] = stateChange{
-		state:     state,
-		changedAt: time.Now(),
-	}
-}
-
 // DebugHardware is the hardware implementation for debugging
 type DebugHardware struct {
+	mu          *sync.Mutex
 	numPumps    int
 	outFilePath string
 
@@ -57,7 +28,8 @@ type DebugHardware struct {
 	win   *goncurses.Window
 	table *ncurses.Table
 
-	state stateChanges
+	state    []stateChange
+	runTimes []time.Duration
 }
 
 // NewDebugHardware creates a new DebugHardware
@@ -91,13 +63,15 @@ func NewDebugHardware(numPumps int, outFilePath string) (*DebugHardware, error) 
 	}
 
 	return &DebugHardware{
+		mu:          &sync.Mutex{},
 		numPumps:    numPumps,
 		outFilePath: outFilePath,
 		initialOut:  initialOut,
 		initialErr:  initialErr,
-		state:       NewStateChanges(initialState),
+		state:       initialState,
 		win:         win,
 		table:       ncurses.NewTable([]int{2, 8, 10}),
+		runTimes:    make([]time.Duration, numPumps),
 	}, nil
 }
 
@@ -108,6 +82,9 @@ func (h *DebugHardware) Name() string {
 
 // Close closes the hardware
 func (h *DebugHardware) Close() error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
 	goncurses.End()
 
 	f := os.Stdout
@@ -130,18 +107,41 @@ func (h *DebugHardware) NumPumps() int {
 
 // Pump turns a pump off or on with the given direction
 func (h *DebugHardware) Pump(idx int, state PumpState) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	return h.pump(idx, state)
+}
+
+func (h *DebugHardware) pump(idx int, state PumpState) error {
 	if idx < 0 || idx >= h.numPumps {
 		return fmt.Errorf("invalid pump index %d", idx)
 	}
 
-	if h.state.GetState(idx).state != state {
-		h.state.SetState(idx, state)
+	currState := h.state[idx].state
+	newState := state
+	if currState != newState {
+		now := time.Now()
+		if currState == Forward {
+			h.runTimes[idx] += now.Sub(h.state[idx].changedAt)
+		}
+
+		h.state[idx].state = state
+		h.state[idx].changedAt = now
 	}
 	return nil
 }
 
 // Update updates the hardware
-func (h *DebugHardware) Update(*zap.Logger) {
+func (h *DebugHardware) Update() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.render()
+}
+
+// update updates the hardware without locking for internal use
+func (h *DebugHardware) update() {
 	h.render()
 }
 
@@ -155,8 +155,8 @@ func (h *DebugHardware) render() {
 		{"#", "State", "Elapsed"},
 	}
 
-	for i := range h.state.changes {
-		s := h.state.GetState(i)
+	for i := range h.state {
+		s := h.state[i]
 		elapsed := now.Sub(s.changedAt).Seconds()
 		rows = append(rows, []string{
 			strconv.FormatInt(int64(i), 10),
@@ -167,4 +167,24 @@ func (h *DebugHardware) render() {
 
 	h.table.Render(h.win, 2, 2, rows)
 	h.win.Refresh()
+}
+
+// TimeRun returns the total time the pump has been run for since the program started
+func (h *DebugHardware) TimeRun(idx int) time.Duration {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if idx < 0 || idx >= h.numPumps {
+		panic(fmt.Errorf("invalid pump index %d", idx))
+	}
+
+	return h.runTimes[idx]
+}
+
+// RunForTimes runs the pumps for the given times
+func (h *DebugHardware) RunForTimes(times []time.Duration) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	return runForTimes(h, times)
 }

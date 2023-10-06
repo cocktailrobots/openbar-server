@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/warthog618/gpiod"
-	"go.uber.org/zap"
 )
 
 var _ Hardware = &GpioHardware{}
@@ -24,8 +23,9 @@ func (p pump) String() string {
 
 // GpioHardware is the hardware implementation for the Raspberry Pi GPIO pins
 type GpioHardware struct {
-	mu    *sync.Mutex
-	pumps []pump
+	mu       *sync.Mutex
+	pumps    []pump
+	runTimes []time.Duration
 }
 
 func NewGpioHardware(pins []int) (*GpioHardware, error) {
@@ -45,16 +45,20 @@ func NewGpioHardware(pins []int) (*GpioHardware, error) {
 	}
 
 	return &GpioHardware{
-		mu:    &sync.Mutex{},
-		pumps: pumps,
+		mu:       &sync.Mutex{},
+		pumps:    pumps,
+		runTimes: make([]time.Duration, len(pumps)),
 	}, nil
 }
 
-func (g GpioHardware) Name() string {
+func (g *GpioHardware) Name() string {
 	return "GPIO"
 }
 
-func (g GpioHardware) Close() error {
+func (g *GpioHardware) Close() error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
 	var firstErr error
 	for _, p := range g.pumps {
 		err := p.line.Close()
@@ -66,17 +70,29 @@ func (g GpioHardware) Close() error {
 	return firstErr
 }
 
-func (g GpioHardware) NumPumps() int {
+func (g *GpioHardware) NumPumps() int {
 	return len(g.pumps)
 }
 
-func (g GpioHardware) Pump(idx int, state PumpState) error {
+func (g *GpioHardware) Pump(idx int, state PumpState) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	return g.pump(idx, state)
+}
+
+func (g *GpioHardware) pump(idx int, state PumpState) error {
 	if idx < 0 || idx >= g.NumPumps() {
 		return fmt.Errorf("invalid pump index %d", idx)
 	}
 
 	g.mu.Lock()
 	defer g.mu.Unlock()
+
+	now := time.Now()
+	if g.state == Forward && state != Forward {
+		g.runTimes[idx] += now.Sub(g.updatedAt)
+	}
 
 	p := g.pumps[idx]
 	var err error
@@ -96,9 +112,34 @@ func (g GpioHardware) Pump(idx int, state PumpState) error {
 	}
 
 	p.state = state
-	p.updatedAt = time.Now()
+	p.updatedAt = now
 	return nil
 }
 
-func (g GpioHardware) Update(logger *zap.Logger) {
+func (g *GpioHardware) Update() {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	g.update()
+}
+
+func (g *GpioHardware) update() {
+}
+
+func (g *GpioHardware) TimeRun(idx int) time.Duration {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	if idx < 0 || idx >= g.NumPumps() {
+		panic(fmt.Errorf("invalid pump index %d", idx))
+	}
+
+	return g.runTimes[idx]
+}
+
+func (g *GpioHardware) RunForTimes(times []time.Duration) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	return runForTimes(g, times)
 }

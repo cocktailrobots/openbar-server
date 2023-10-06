@@ -22,8 +22,10 @@ func (api *CocktailsAPI) RecipesHandler(w http.ResponseWriter, r *http.Request) 
 		api.ListRecipesHandler(ctx, w, r)
 	case http.MethodPost:
 		api.PostRecipesHandler(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodPost}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 
@@ -35,7 +37,7 @@ func (api *CocktailsAPI) ListRecipesHandler(ctx context.Context, w http.Response
 		fluids = strings.Split(fluidsStr, ",")
 
 		for i, fluid := range fluids {
-			fluids[i] = strings.ToUpper(strings.TrimSpace(fluid))
+			fluids[i] = strings.ToLower(strings.TrimSpace(fluid))
 
 			if fluids[i] == "" {
 				fluids = append(fluids[:i], fluids[i+1:]...)
@@ -98,8 +100,10 @@ func (api *CocktailsAPI) RecipeHandler(w http.ResponseWriter, r *http.Request) {
 		api.DeleteRecipe(ctx, w, r)
 	case http.MethodPatch:
 		api.PatchRecipe(ctx, w, r)
+	case http.MethodOptions:
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodDelete, http.MethodPatch}, w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
 }
 
@@ -175,6 +179,7 @@ func (api *CocktailsAPI) PatchRecipe(ctx context.Context, w http.ResponseWriter,
 		return
 	}
 
+	api.Logger().Info("Updating recipe", zap.Any("recipe", recipe))
 	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
 		err := cocktailsdb.UpdateRecipe(ctx, tx, &recipe)
 		if err != nil {
