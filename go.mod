@@ -3,12 +3,9 @@ module github.com/cocktailrobots/openbar-server
 go 1.19
 
 require (
-	github.com/bep/debounce v1.2.1
 	github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc
 	github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22
-	github.com/daspoet/gowinkey v0.0.6
 	github.com/dolthub/driver v0.0.0-20230817202733-930d981c0c45
-	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/gbin/goncurses v0.0.0-20141106211150-34d9399fcea5
 	github.com/go-sql-driver/mysql v1.7.2-0.20230713085235-0b18dac46f7f
 	github.com/gocraft/dbr/v2 v2.7.5
@@ -106,6 +103,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	golang.design/x/mainthread v0.3.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
