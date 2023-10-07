@@ -125,8 +125,49 @@ sudo bash
 mkdir /etc/openbar-server
 cd /etc/openbar-server
 vim config.yaml
+vim /etc/systemd/system/openbar-server.service
 ```
 
+```
+[Unit]
+Description=dolt service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+Environment=DOLT_ROOT_PATH=/var/dbs/
+WorkingDirectory=/etc/openbar-server
+ExecStart=/home/openbar/go/bin/openbar-server config.yaml
+
+LimitNOFILE=100000
+
+Restart=always
+RestartSec=1
+
+MemoryAccounting=true
+MemoryMax=90%
+
+[Install]
+WantedBy=multi-user.target
+```
+
+
+## Openbar-client
+
+git clone
+cd
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+nvm install v18.18.0
+npm install
+npm run build
+sudo mkdir /etc/openbar-client
+mv build/* /etc/openbar-client/
+sudo apt install python3-pip
+sudo pip install twisted
 
 
 ## Enabling Android USB Tethering

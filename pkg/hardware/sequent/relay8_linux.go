@@ -197,15 +197,7 @@ func readRelay8(dev *i2c.I2C) (byte, error) {
 func UpdateBoard(dev *i2c.I2C, states Relay8States, attempts int) error {
 	desired := states.toByte()
 
-	for i := attempts - 1; i >= 0; i++ {
-		err := writeRelay8(dev, desired)
-		if err != nil {
-			logf("error writing to device: %s", err.Error())
-			if i == 0 {
-				return fmt.Errorf("error writing to device: %w", err)
-			}
-		}
-
+	for i := attempts - 1; i >= 0; i-- {
 		read, err := readRelay8(dev)
 		if err != nil {
 			logf("error reading from device: %s", err.Error())
@@ -216,6 +208,14 @@ func UpdateBoard(dev *i2c.I2C, states Relay8States, attempts int) error {
 
 		if read == desired {
 			return nil
+		}
+
+		err = writeRelay8(dev, desired)
+		if err != nil {
+			logf("error writing to device: %s", err.Error())
+			if i == 0 {
+				return fmt.Errorf("error writing to device: %w", err)
+			}
 		}
 	}
 

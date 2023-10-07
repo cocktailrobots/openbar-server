@@ -94,41 +94,25 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 			onCount++
 		}
 	}
+	hw.update()
 
-	states := make([]PumpState, numPumps)
 	for onCount > 0 {
 		elapsed := time.Since(start)
 		onCount = 0
-		next := time.Duration(0x7fffffffffffffff)
 		for i := 0; i < numPumps; i++ {
-			state := Off
-			if elapsed < times[i] {
-				if times[i] < next {
-					next = times[i]
-				}
-
-				state = Forward
+			if elapsed <= times[i] {
 				onCount++
-			}
-
-			if states[i] != state {
-				if err := hw.pump(i, state); err != nil {
-					return fmt.Errorf("error turning pump %d to state %d: %w", i, state, err)
+			} else {
+				if err := hw.pump(i, Off); err != nil {
+					return fmt.Errorf("error turning pump %d to state %s: %w", i, Off.String(), err)
 				}
 			}
-
-			states[i] = state
 		}
 
 		hw.update()
 
 		if onCount > 0 {
-			toSleep := next - elapsed
-			if toSleep > 0 && toSleep > 50*time.Millisecond {
-				time.Sleep(toSleep - (50 * time.Millisecond))
-			} else {
-				time.Sleep(time.Millisecond)
-			}
+			time.Sleep(5 * time.Millisecond)
 		}
 	}
 
