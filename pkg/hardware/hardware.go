@@ -81,12 +81,18 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 				log.Println(err)
 			}
 
-			hw.update()
+			if i%3 == 0 {
+				hw.update()
+				time.Sleep(time.Millisecond)
+			}
 		}
+
+		hw.update()
 	}()
 
 	start := time.Now()
 	onCount := 0
+	running := make([]bool, numPumps)
 	for i := 0; i < numPumps; i++ {
 		if times[i] > 0 {
 			if err := hw.pump(i, Forward); err != nil {
@@ -94,8 +100,16 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 			}
 
 			onCount++
+			running[i] = true
+
+			if onCount%3 == 0 {
+				hw.update()
+				time.Sleep(time.Millisecond)
+			}
+		}
+
+		if onCount%3 != 0 {
 			hw.update()
-			time.Sleep(50 * time.Microsecond)
 		}
 	}
 
@@ -104,16 +118,27 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 
 		elapsed := time.Since(start)
 		onCount = 0
+		changes := 0
 		for i := 0; i < numPumps; i++ {
 			if elapsed <= times[i] {
 				onCount++
-			} else {
+			} else if running[i] {
 				if err := hw.pump(i, Off); err != nil {
 					return fmt.Errorf("error turning pump %d off: %w", i, err)
 				}
 
-				hw.update()
+				running[i] = false
+				changes++
+
+				if changes%3 == 0 {
+					hw.update()
+					time.Sleep(time.Millisecond)
+				}
 			}
+		}
+
+		if changes%3 != 0 {
+			hw.update()
 		}
 	}
 
