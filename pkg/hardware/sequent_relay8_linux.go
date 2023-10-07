@@ -139,8 +139,7 @@ func (s *SequentRelay8Hardware) pump(idx int, state PumpState) error {
 		s.stateChangedAt[idx] = now
 	}
 
-	board := s.boards[boardIdx]
-	board.state = board.state.Set(pumpIdx, state != Off)
+	s.boards[boardIdx].state = s.boards[boardIdx].state.Set(pumpIdx, state != Off)
 
 	return nil
 }
