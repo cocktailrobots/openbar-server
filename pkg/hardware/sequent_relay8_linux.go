@@ -11,9 +11,10 @@ import (
 )
 
 type relay8Board struct {
-	dev   *i2c.I2C
-	stack byte
-	state sequent.Relay8States
+	dev             *i2c.I2C
+	stack           byte
+	state           sequent.Relay8States
+	stateLastUpdate sequent.Relay8States
 }
 
 /*func main() {
@@ -78,9 +79,10 @@ func NewSR8Hardware(expBoardCount int) (*SequentRelay8Hardware, error) {
 		}
 
 		relay8s = append(relay8s, relay8Board{
-			dev:   dev,
-			stack: i,
-			state: sequent.Relay8States{},
+			dev:             dev,
+			stack:           i,
+			state:           sequent.Relay8States{},
+			stateLastUpdate: sequent.Relay8States{},
 		})
 	}
 
@@ -154,10 +156,17 @@ func (s *SequentRelay8Hardware) Update() {
 func (s *SequentRelay8Hardware) update() {
 	for i := range s.boards {
 		board := s.boards[i]
+
+		if board.state.Equal(board.stateLastUpdate) {
+			continue
+		}
+
 		err := sequent.UpdateBoard(board.dev, board.state, 10)
 		if err != nil {
 			log.Println(fmt.Errorf("error updating board %d: %w", board.stack, err))
 		}
+
+		s.boards[i].stateLastUpdate = board.state
 	}
 }
 

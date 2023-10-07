@@ -94,11 +94,14 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 			}
 
 			onCount++
+			hw.update()
+			time.Sleep(50 * time.Microsecond)
 		}
-		hw.update()
 	}
 
 	for onCount > 0 {
+		time.Sleep(5 * time.Millisecond)
+
 		elapsed := time.Since(start)
 		onCount = 0
 		for i := 0; i < numPumps; i++ {
@@ -106,15 +109,11 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 				onCount++
 			} else {
 				if err := hw.pump(i, Off); err != nil {
-					return fmt.Errorf("error turning pump %d to state %s: %w", i, Off.String(), err)
+					return fmt.Errorf("error turning pump %d off: %w", i, err)
 				}
 
 				hw.update()
 			}
-		}
-
-		if onCount > 0 {
-			time.Sleep(5 * time.Millisecond)
 		}
 	}
 
