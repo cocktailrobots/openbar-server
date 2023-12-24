@@ -96,19 +96,30 @@ Bye
 
 ### Installing openbar-server from Source
 
-`wget -o go1.21.1.linux-arm64.tar.gz https://go.dev/dl/go1.21.1.linux-arm64.tar.gz`
-`rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.1.linux-arm64.tar.gz`
-`vi ~/.bashrc`
-`PATH=$PATH:/usr/local/go/bin:~/go/bin`
+#### Install Go
 
+Remove any old go installations
+`rm -rf /usr/local/go`
+
+Download the latest arm64 go installation
+`curl -L -o go1.21.1.linux-arm64.tar.gz https://go.dev/dl/go1.21.1.linux-arm64.tar.gz`
+
+Untar the downloaded file
+`sudo tar -C /usr/local -xzf go1.21.1.linux-arm64.tar.gz`
+
+Use `vi ~/.bashrc` to edit the PATH variable `PATH=$PATH:/usr/local/go/bin:~/go/bin```
+
+#### Install git and ncurses
 `sudo apt install git`
 `sudo apt install libncurses5-dev`
 
+#### Clone the source code and install
 `git clone https://github.com/cocktailrobots/openbar-server.git`
 
 `cd openbar-server/cmd/openbar-server/`
 `go install .`
 
+#### Run openbar-server to test installation succeeded
 ```bash
 $ openbar-server
 2023/09/16 11:03:46 Usage: openbar-server [-migration-dir=<migration_file_dir>] <config file>
