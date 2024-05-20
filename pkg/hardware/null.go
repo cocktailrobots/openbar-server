@@ -4,10 +4,14 @@ import (
 	"time"
 )
 
-type NullHw struct{}
+type NullHw struct {
+	rp *ReversePin
+}
 
-func Null() NullHw {
-	return NullHw{}
+func Null(rp *ReversePin) NullHw {
+	return NullHw{
+		rp: rp,
+	}
 }
 
 func (nhw NullHw) Name() string {
@@ -39,4 +43,8 @@ func (nhw NullHw) TimeRun(idx int) time.Duration {
 
 func (nhw NullHw) RunForTimes(times []time.Duration) error {
 	return nil
+}
+
+func (nhw NullHw) GetReversePin() *ReversePin {
+	return nhw.rp
 }

@@ -26,9 +26,10 @@ type GpioHardware struct {
 	mu       *sync.Mutex
 	pumps    []pump
 	runTimes []time.Duration
+	rp       *ReversePin
 }
 
-func NewGpioHardware(pins []int) (*GpioHardware, error) {
+func NewGpioHardware(pins []int, rp *ReversePin) (*GpioHardware, error) {
 	var pumps []pump
 	for _, pin := range pins {
 		l, err := gpiod.RequestLine("gpiochip0", pin, gpiod.AsOutput(0))
@@ -48,6 +49,7 @@ func NewGpioHardware(pins []int) (*GpioHardware, error) {
 		mu:       &sync.Mutex{},
 		pumps:    pumps,
 		runTimes: make([]time.Duration, len(pumps)),
+		rp:       rp,
 	}, nil
 }
 
@@ -142,4 +144,8 @@ func (g *GpioHardware) RunForTimes(times []time.Duration) error {
 	defer g.mu.Unlock()
 
 	return runForTimes(g, times)
+}
+
+func (g *GpioHardware) GetReversePin() *ReversePin {
+	return g.rp
 }

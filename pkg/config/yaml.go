@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"fmt"
@@ -6,6 +6,11 @@ import (
 	"gopkg.in/yaml.v2"
 	"os"
 )
+
+type ReversePinConfig struct {
+	Pin         int  `yaml:"pin"`
+	ForwardHigh bool `yaml:"forward-high"`
+}
 
 type DebugHardwareConfig struct {
 	NumPumps int    `yaml:"num-pumps"`
@@ -66,15 +71,16 @@ func (c *ListenerConfig) GetPort() int {
 }
 
 type Config struct {
-	Hardware     *HardwareConfig `yaml:"hardware"`
-	Buttons      *ButtonConfig   `yaml:"buttons"`
-	DB           *DBConfig       `yaml:"db"`
-	CocktailsApi *ListenerConfig `yaml:"cocktails-api"`
-	OpenBarApi   *ListenerConfig `yaml:"openbar-api"`
-	MigrationDir string          `yaml:"migration-dir"`
+	Hardware     *HardwareConfig   `yaml:"hardware"`
+	ReversePin   *ReversePinConfig `yaml:"reverse-pin"`
+	Buttons      *ButtonConfig     `yaml:"buttons"`
+	DB           *DBConfig         `yaml:"db"`
+	CocktailsApi *ListenerConfig   `yaml:"cocktails-api"`
+	OpenBarApi   *ListenerConfig   `yaml:"openbar-api"`
+	MigrationDir string            `yaml:"migration-dir"`
 }
 
-func ReadConfig(filename string, logger *zap.Logger) (*Config, error) {
+func Read(filename string, logger *zap.Logger) (*Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, fmt.Errorf("error reading config file %s: %w", filename, err)

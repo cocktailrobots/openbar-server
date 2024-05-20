@@ -12,15 +12,17 @@ type TestHardware struct {
 	state     []PumpState
 	runTimes  []time.Duration
 	changedAt []time.Time
+	rp        *ReversePin
 }
 
-func NewTestHardware(numPumps int) *TestHardware {
+func NewTestHardware(numPumps int, rp *ReversePin) *TestHardware {
 	return &TestHardware{
 		mu:        &sync.Mutex{},
 		numPumps:  numPumps,
 		state:     make([]PumpState, 8),
 		runTimes:  make([]time.Duration, 8),
 		changedAt: make([]time.Time, 8),
+		rp:        rp,
 	}
 }
 
@@ -91,4 +93,8 @@ func (thw *TestHardware) RunForTimes(times []time.Duration) error {
 	defer thw.mu.Unlock()
 
 	return runForTimes(thw, times)
+}
+
+func (thw *TestHardware) GetReversePin() *ReversePin {
+	return thw.rp
 }

@@ -7,6 +7,7 @@ import (
 )
 
 type GpioHardware struct {
+	rp *ReversePin
 }
 
 func (s *GpioHardware) Name() string {
@@ -44,6 +45,12 @@ func (s *GpioHardware) RunForTimes(times []time.Duration) error {
 	return nil
 }
 
-func NewGpioHardware([]int) (*GpioHardware, error) {
-	return &GpioHardware{}, nil
+func (s *GpioHardware) GetReversePin() *ReversePin {
+	return s.rp
+}
+
+func NewGpioHardware(pins []int, rp *ReversePin) (*GpioHardware, error) {
+	return &GpioHardware{
+		rp: rp,
+	}, nil
 }

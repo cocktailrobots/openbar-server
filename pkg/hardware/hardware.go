@@ -9,13 +9,16 @@ import (
 type PumpState int
 
 const (
-	Off PumpState = iota
+	Undefined PumpState = iota
+	Off
 	Forward
 	Backward
 )
 
 func (ps PumpState) String() string {
 	switch ps {
+	case Undefined:
+		return "Undefined"
 	case Off:
 		return "Off"
 	case Forward:
@@ -55,6 +58,9 @@ type Hardware interface {
 
 	// RunForTimes runs the pumps for the given times
 	RunForTimes(times []time.Duration) error
+
+	// GetReversePin gets the reverse Pin object
+	GetReversePin() *ReversePin
 }
 
 // TurnPumpsOff turns all pumps off
@@ -89,6 +95,8 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 
 		hw.update()
 	}()
+
+	hw.GetReversePin().SetDirection(Forward)
 
 	start := time.Now()
 	onCount := 0
@@ -142,5 +150,97 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 		}
 	}
 
+	return nil
+}
+
+type asyncPumpTimes struct {
+	times     []time.Time
+	direction PumpState
+}
+
+func startAsyncHWRoutine(hw Hardware) chan asyncPumpTimes {
+	timeCh := make(chan asyncPumpTimes, 32)
+	numPumps := hw.NumPumps()
+
+	go func() {
+		latestOffTimes := make([]time.Time, numPumps)
+		latestDirection := Forward
+
+		currentState := make([]PumpState, numPumps)
+		for i := 0; i < numPumps; i++ {
+			currentState[i] = Undefined
+		}
+
+		for {
+			select {
+			case apt := <-timeCh:
+				if len(apt.times) == numPumps {
+					latestOffTimes = apt.times
+
+					if apt.direction != Off {
+						latestDirection = apt.direction
+					}
+				}
+
+			case <-time.After(10 * time.Millisecond):
+			}
+
+			now := time.Now()
+			for i, t := range latestOffTimes {
+				newState := latestDirection
+				hw.GetReversePin().SetDirection(newState)
+
+				if t.Before(now) {
+					newState = Off
+				}
+
+				if newState != currentState[i] {
+					if err := hw.Pump(i, newState); err != nil {
+						log.Println(err)
+					}
+					currentState[i] = newState
+				}
+			}
+
+			//hw.Update()
+		}
+	}()
+
+	return timeCh
+}
+
+type AsyncHWRunner struct {
+	hw Hardware
+	ch chan asyncPumpTimes
+}
+
+func NewAsyncHWRunner(hw Hardware) *AsyncHWRunner {
+	return &AsyncHWRunner{
+		hw: hw,
+		ch: startAsyncHWRoutine(hw),
+	}
+}
+
+func (ahwr *AsyncHWRunner) RunPumps(direction PumpState, times []time.Duration) error {
+	numPumps := ahwr.hw.NumPumps()
+	if len(times) != numPumps {
+		return fmt.Errorf("expected %d times, but got %d", numPumps, len(times))
+	} else if direction == Off {
+		return fmt.Errorf("direction cannot be Off")
+	} else if direction == Undefined {
+		return fmt.Errorf("direction cannot be Undefined")
+	}
+
+	apt := asyncPumpTimes{
+		times:     make([]time.Time, numPumps),
+		direction: direction,
+	}
+
+	t := time.Now()
+	for i := 0; i < numPumps; i++ {
+		apt.times[i] = t.Add(times[i])
+	}
+
+	ahwr.ch <- apt
 	return nil
 }

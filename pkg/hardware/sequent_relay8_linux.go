@@ -15,6 +15,7 @@ type relay8Board struct {
 	stack           byte
 	state           sequent.Relay8States
 	stateLastUpdate sequent.Relay8States
+	rp              *ReversePin
 }
 
 /*func main() {
@@ -70,7 +71,7 @@ type SequentRelay8Hardware struct {
 	stateChangedAt []time.Time
 }
 
-func NewSR8Hardware(expBoardCount int) (*SequentRelay8Hardware, error) {
+func NewSR8Hardware(expBoardCount int, rp *ReversePin) (*SequentRelay8Hardware, error) {
 	var relay8s []relay8Board
 	for i := byte(0); i < 8; i++ {
 		dev, err := sequent.InitBoard(i)
@@ -83,6 +84,7 @@ func NewSR8Hardware(expBoardCount int) (*SequentRelay8Hardware, error) {
 			stack:           i,
 			state:           sequent.Relay8States{},
 			stateLastUpdate: sequent.Relay8States{},
+			rp:              rp,
 		})
 	}
 
@@ -182,4 +184,8 @@ func (s *SequentRelay8Hardware) RunForTimes(times []time.Duration) error {
 	defer s.mu.Unlock()
 
 	return runForTimes(s, times)
+}
+
+func (s *SequentRelay8Hardware) GetReversePin() *ReversePin {
+	return s.rp
 }

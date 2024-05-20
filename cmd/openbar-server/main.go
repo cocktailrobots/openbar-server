@@ -13,6 +13,7 @@ import (
 
 	"github.com/cocktailrobots/openbar-server/pkg/apis/cocktailsapi"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/openbarapi"
+	cfg "github.com/cocktailrobots/openbar-server/pkg/config"
 	"github.com/cocktailrobots/openbar-server/pkg/db"
 	"github.com/cocktailrobots/openbar-server/pkg/hardware"
 	"github.com/cocktailrobots/openbar-server/pkg/util/dbutils"
@@ -55,7 +56,7 @@ func main() {
 	ctx, cancelCtx := context.WithCancel(ctx)
 
 	configFile := os.Args[1]
-	config, err := ReadConfig(configFile, logger)
+	config, err := cfg.Read(configFile, logger)
 	if err != nil {
 		log.Fatal("Failed to read " + configFile + " - " + err.Error())
 	}
@@ -77,7 +78,7 @@ func main() {
 	}
 }
 
-func runMigrations(ctx context.Context, migrationsDir string, config *Config) error {
+func runMigrations(ctx context.Context, migrationsDir string, config *cfg.Config) error {
 	openBarConn, err := connectToDB(ctx, "", "", config, true)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
@@ -87,7 +88,7 @@ func runMigrations(ctx context.Context, migrationsDir string, config *Config) er
 	return dbutils.MigrateUp(openBarConn, db.OpenBarDB, migrationsDir)
 }
 
-func run(ctx context.Context, logger *zap.Logger, config *Config) error {
+func run(ctx context.Context, logger *zap.Logger, config *cfg.Config) error {
 	cockConn, err := connectToDB(ctx, db.CocktailsDB, mainBranch, config, false)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
@@ -175,7 +176,7 @@ func run(ctx context.Context, logger *zap.Logger, config *Config) error {
 	return nil
 }
 
-func initButtons(ctx context.Context, config *Config, logger *zap.Logger) (buttons.Buttons, error) {
+func initButtons(ctx context.Context, config *cfg.Config, logger *zap.Logger) (buttons.Buttons, error) {
 	if config.Buttons != nil {
 		switch {
 		case config.Buttons.Gpio != nil:
@@ -193,25 +194,30 @@ func initButtons(ctx context.Context, config *Config, logger *zap.Logger) (butto
 	return buttons.NewNullButtons(), nil
 }
 
-func initHardware(ctx context.Context, config *Config, logger *zap.Logger) (hardware.Hardware, error) {
+func initHardware(ctx context.Context, config *cfg.Config, logger *zap.Logger) (hardware.Hardware, error) {
 	var hw hardware.Hardware
 	var err error
 
+	rp, err := hardware.NewReversePin(config.ReversePin)
+	if err != nil {
+		return nil, fmt.Errorf("error creating reverse pin: %w", err)
+	}
+
 	if config.Hardware == nil {
-		hw = hardware.NewTestHardware(8)
+		hw = hardware.NewTestHardware(8, rp)
 	} else {
 		switch {
 		case config.Hardware.Debug != nil:
 			logger.Info("Creating debug hardware")
 			dbgConfig := config.Hardware.Debug
-			hw, err = hardware.NewDebugHardware(dbgConfig.NumPumps, dbgConfig.OutFile)
+			hw, err = hardware.NewDebugHardware(dbgConfig.NumPumps, dbgConfig.OutFile, rp)
 			if err != nil {
 				return nil, fmt.Errorf("error creating debug hardware: %w", err)
 			}
 		case config.Hardware.Gpio != nil:
 			logger.Info("Creating GPIO hardware")
 			gpioConfig := config.Hardware.Gpio
-			hw, err = hardware.NewGpioHardware(gpioConfig.Pins)
+			hw, err = hardware.NewGpioHardware(gpioConfig.Pins, rp)
 			if err != nil {
 				return nil, fmt.Errorf("error creating GPIO hardware: %w", err)
 			}
@@ -219,7 +225,7 @@ func initHardware(ctx context.Context, config *Config, logger *zap.Logger) (hard
 		case config.Hardware.Sequent != nil:
 			logger.Info("Creating sequent hardware")
 			sequentConfig := config.Hardware.Sequent
-			hw, err = hardware.NewSR8Hardware(sequentConfig.ExpectedBoardCount)
+			hw, err = hardware.NewSR8Hardware(sequentConfig.ExpectedBoardCount, rp)
 			if err != nil {
 				return nil, fmt.Errorf("error creating sequent hardware: %w", err)
 			}
@@ -234,7 +240,7 @@ func initHardware(ctx context.Context, config *Config, logger *zap.Logger) (hard
 	return hw, nil
 }
 
-func connectToDB(ctx context.Context, database, branch string, config *Config, multiStatements bool) (*dbr.Connection, error) {
+func connectToDB(ctx context.Context, database, branch string, config *cfg.Config, multiStatements bool) (*dbr.Connection, error) {
 	if config.DB.Host == nil || *config.DB.Host == "" {
 		return nil, fmt.Errorf("no database host specified")
 	} else if config.DB.User == nil || *config.DB.User == "" {
@@ -260,7 +266,7 @@ func connectToDB(ctx context.Context, database, branch string, config *Config, m
 }
 
 // startHttpServer starts an HTTP Server on the given port.
-func startHttpServer(ctx context.Context, listener *ListenerConfig, mux http.Handler) error {
+func startHttpServer(ctx context.Context, listener *cfg.ListenerConfig, mux http.Handler) error {
 	addr := fmt.Sprintf("%s:%d", listener.GetHost(), listener.GetPort())
 	srv := &http.Server{
 		Addr:    addr,

@@ -10,13 +10,15 @@ import (
 
 type OpenBarAPI struct {
 	*apis.API
-	hw hardware.Hardware
+	hw    hardware.Hardware
+	ashwr *hardware.AsyncHWRunner
 }
 
 func New(logger *zap.Logger, txp dbutils.TxProvider, rtr *mux.Router, hw hardware.Hardware) *OpenBarAPI {
 	api := &OpenBarAPI{
-		API: apis.NewAPI(logger, txp, rtr),
-		hw:  hw,
+		API:   apis.NewAPI(logger, txp, rtr),
+		hw:    hw,
+		ashwr: hardware.NewAsyncHWRunner(hw),
 	}
 
 	rtr.HandleFunc("/", api.DefaultHandler)
@@ -28,6 +30,7 @@ func New(logger *zap.Logger, txp dbutils.TxProvider, rtr *mux.Router, hw hardwar
 	rtr.HandleFunc("/menus/{name}/recipes", api.MenuRecipesHandler)
 	rtr.HandleFunc("/menus/{name}/recipes/{id}", api.MenuRecipeHandler)
 	rtr.HandleFunc("/make", api.MakeHandler)
+	rtr.HandleFunc("/buttons", api.ButtonsHandler)
 
 	return api
 }

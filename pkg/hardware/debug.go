@@ -30,10 +30,12 @@ type DebugHardware struct {
 
 	state    []stateChange
 	runTimes []time.Duration
+
+	rp *ReversePin
 }
 
 // NewDebugHardware creates a new DebugHardware
-func NewDebugHardware(numPumps int, outFilePath string) (*DebugHardware, error) {
+func NewDebugHardware(numPumps int, outFilePath string, rp *ReversePin) (*DebugHardware, error) {
 	f, err := os.Create(outFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("error creating file %s: %v", outFilePath, err)
@@ -72,6 +74,7 @@ func NewDebugHardware(numPumps int, outFilePath string) (*DebugHardware, error) 
 		win:         win,
 		table:       ncurses.NewTable([]int{2, 8, 10}),
 		runTimes:    make([]time.Duration, numPumps),
+		rp:          rp,
 	}, nil
 }
 
@@ -146,9 +149,15 @@ func (h *DebugHardware) update() {
 }
 
 func (h *DebugHardware) render() {
+	rpStrVal := "Reverse Pin: 0"
+	if h.rp.Value() != 0 {
+		rpStrVal = "Reverse Pin: 1"
+	}
+
 	h.win.Clear()
 	h.win.MovePrint(0, 0, "Debug Hardware")
-	h.win.MovePrint(1, 0, "Pump State:")
+	h.win.MovePrint(1, 0, rpStrVal)
+	h.win.MovePrint(2, 0, "Pump State:")
 
 	now := time.Now()
 	rows := [][]string{
@@ -165,7 +174,7 @@ func (h *DebugHardware) render() {
 		})
 	}
 
-	h.table.Render(h.win, 2, 2, rows)
+	h.table.Render(h.win, 2, 3, rows)
 	h.win.Refresh()
 }
 
@@ -187,4 +196,9 @@ func (h *DebugHardware) RunForTimes(times []time.Duration) error {
 	defer h.mu.Unlock()
 
 	return runForTimes(h, times)
+}
+
+// GetReversePin gets the reverse Pin object
+func (h *DebugHardware) GetReversePin() *ReversePin {
+	return h.rp
 }

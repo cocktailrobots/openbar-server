@@ -1,4 +1,4 @@
-#
+# Openbar Rasberry Pi Setup
 
 ## OS Installation
 Use the [Raspberry Pi Imager](https://www.raspberrypi.com/software/) to install the Raspberry Pi Os Lite (64-bit). 
@@ -14,6 +14,19 @@ SSID and password for your wireless network.
 Finally, click the "Write" button to start the installation. Once the installation is complete, eject the SD card and
 insert it into the Raspberry Pi and power it on. Use the SSH key or username/password to log into the Raspberry Pi.
 
+## Prerequisites
+
+```
+sudo apt upgrade
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+nvm install v18.18.0
+sudo apt install git -y
+sudo apt install libncurses5-dev -y
+sudo apt install mariadb-client -y
+sudo apt install python3-pip -y
+sudo pip install twisted
+```
+
 ## Dolt Installation and Setup
 
 
@@ -23,8 +36,10 @@ insert it into the Raspberry Pi and power it on. Use the SSH key or username/pas
 
 ### Clone your fork of the Cocktails Repo
 
-```
-openbar@openbar:~ $ sudo bash
+```bash
+openbar@openbar:~ $ sudo bas
+root@openbar:/home/username# cd /var
+root@openbar:/var# mkdir dbs
 root@openbar:/var# cd dbs
 root@openbar:/var/dbs# dolt clone openbar/cocktails
 cloning https://doltremoteapi.dolthub.com/openbar/cocktails
@@ -35,6 +50,7 @@ listener:
   host: "0.0.0.0"
   port: 3306
   max_connections: 5' > config.yaml
+
 root@openbar:/var/dbs# mkdir /var/log/dolt
 root@openbar:/var/dbs# echo '[Unit]
 Description=dolt service
@@ -63,9 +79,8 @@ WantedBy=multi-user.target' > /etc/systemd/system/dolt.service
 root@openbar:/var/dbs# exit
 openbar@openbar:~ $ sudo systemctl daemon-reload
 openbar@openbar:~ $ sudo systemctl enable dolt.service
+openbar@openbar:~ $ sudo systemctl start dolt
 ```
-
-`sudo apt install mariadb-client`
 
 
 ```bash
@@ -96,18 +111,29 @@ Bye
 
 ### Installing openbar-server from Source
 
-`wget -o go1.21.1.linux-arm64.tar.gz https://go.dev/dl/go1.21.1.linux-arm64.tar.gz`
-`rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.1.linux-arm64.tar.gz`
-`vi ~/.bashrc`
-`PATH=$PATH:/usr/local/go/bin:~/go/bin`
+#### Install go
 
-`sudo apt install git`
-`sudo apt install libncurses5-dev`
+`wget https://go.dev/dl/go1.21.1.linux-arm64.tar.gz`
+`sudo tar -C /usr/local -xzf go1.21.1.linux-arm64.tar.gz`
 
-`git clone https://github.com/cocktailrobots/openbar-server.git`
+Modify the ~/.bashrc file using vi or whatever editor you like. Add the following line to the end of the file. This will add the go binary to the PATH variable
 
-`cd openbar-server/cmd/openbar-server/`
-`go install .`
+`PATH=$PATH:/usr/local/go/bin:~/go/bin`t
+
+#### Install git
+
+`sudo apt install git -y`
+
+#### Additional packages
+
+`sudo apt install libncurses5-dev -y`
+
+#### Clone the openbar-server repo and install
+```
+git clone https://github.com/cocktailrobots/openbar-server.git
+cd openbar-server/cmd/openbar-server/
+go install .
+```
 
 ```bash
 $ openbar-server
@@ -124,8 +150,8 @@ $ openbar-server
 sudo bash
 mkdir /etc/openbar-server
 cd /etc/openbar-server
-vim config.yaml
-vim /etc/systemd/system/openbar-server.service
+vi config.yaml
+vi /etc/systemd/system/openbar-server.service
 ```
 
 ```
@@ -141,7 +167,7 @@ AmbientCapabilities=CAP_NET_BIND_SERVICE
 
 Environment=DOLT_ROOT_PATH=/var/dbs/
 WorkingDirectory=/etc/openbar-server
-ExecStart=/home/openbar/go/bin/openbar-server config.yaml
+execStart=/home/openbar/go/bin/openbar-server config.yaml
 
 LimitNOFILE=100000
 
@@ -151,23 +177,80 @@ RestartSec=1
 MemoryAccounting=true
 MemoryMax=90%
 
-[Install]
+[Install
 WantedBy=multi-user.target
 ```
+
+```yaml
+hardware:
+  debug:
+    num-pumps: 8
+    out-file: "/var/log/openbar-server/debug.log"
+  gpio:
+    pins: [...]
+  sequent:
+    expected-board-count: 1
+buttons:
+  gpio:
+    pins: [...]
+    debounce-duration: 10
+    active-low: false
+    pull-up: true
+db:
+  host: 127.0.0.1
+  port: 3306
+  user: openbar
+  pass: password
+cocktails-api:
+  port: 8675
+  host: 0.0.0.0
+openbar-api:
+  port: 3099
+  host: 0.0.0.0
+migration-dir: "/home/openbar/openbar-server/schema/openbardb"
+```
+
+```bash
+root@raspberrypi:/home/brian/openbar-server/cmd/openbar-server# exit
+openbar@openbar:~ $ sudo systemctl enable openbar-server.service
+openbar@openbar:~ $ sudo systemctl start openbar-server
+```
+
+### Enable I2C for Sequent relay hat
+
+To enable I2C:
+
+```
+1. Run: sudo raspi-config.
+2. Select Interfacing Options > I2C.
+3. Select Yes when prompted to enable the I2C interface.
+4. Select Yes when prompted to automatically load the I2C kernel module.
+5. Select Finish.
+6. Select Yes when prompted to reboot or run sudo reboot
+````
+
+### Sequent 8 relay hat testing
+
+```
+~$ git clone https://github.com/SequentMicrosystems/8relind-rpi.git
+~$ cd 8relind-rpi/
+~/8relind-rpi$ sudo make install
+~/8relind-rpi$ 8
+```
+
 
 
 ## Openbar-client
 
-git clone
-cd
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-nvm install v18.18.0
+git clone https://github.com/cocktailrobots/openbar-client.git
+cd openbar-client
 npm install
 npm run build
 sudo mkdir /etc/openbar-client
 mv build/* /etc/openbar-client/
-sudo apt install python3-pip
-sudo pip install twisted
+
+
+
 
 
 ## Enabling Android USB Tethering

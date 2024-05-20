@@ -7,6 +7,7 @@ import (
 )
 
 type SequentRelay8Hardware struct {
+	rp *ReversePin
 }
 
 func (s *SequentRelay8Hardware) Name() string {
@@ -40,6 +41,12 @@ func (s *SequentRelay8Hardware) RunForTimes(times []time.Duration) error {
 	return nil
 }
 
-func NewSR8Hardware(expBoardCount int) (*SequentRelay8Hardware, error) {
-	return &SequentRelay8Hardware{}, nil
+func (s *SequentRelay8Hardware) GetReversePin() *ReversePin {
+	return s.rp
+}
+
+func NewSR8Hardware(expBoardCount int, rp *ReversePin) (*SequentRelay8Hardware, error) {
+	return &SequentRelay8Hardware{
+		rp: rp,
+	}, nil
 }
