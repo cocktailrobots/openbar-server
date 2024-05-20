@@ -113,12 +113,17 @@ Bye
 
 #### Install go
 
+Remove any old go installations
+`rm -rf /usr/local/go`
+
+Download the latest arm64 go installation
 `wget https://go.dev/dl/go1.21.1.linux-arm64.tar.gz`
+
+Untar the downloaded file
 `sudo tar -C /usr/local -xzf go1.21.1.linux-arm64.tar.gz`
 
 Modify the ~/.bashrc file using vi or whatever editor you like. Add the following line to the end of the file. This will add the go binary to the PATH variable
-
-`PATH=$PATH:/usr/local/go/bin:~/go/bin`t
+`PATH=$PATH:/usr/local/go/bin:~/go/bin`
 
 #### Install git
 
@@ -135,6 +140,7 @@ cd openbar-server/cmd/openbar-server/
 go install .
 ```
 
+#### Run openbar-server to test installation succeeded
 ```bash
 $ openbar-server
 2023/09/16 11:03:46 Usage: openbar-server [-migration-dir=<migration_file_dir>] <config file>
