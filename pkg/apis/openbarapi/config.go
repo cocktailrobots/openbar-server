@@ -19,8 +19,10 @@ func (api *OpenBarAPI) ConfigHandler(w http.ResponseWriter, r *http.Request) {
 		api.getConfig(ctx, w, r)
 	case http.MethodPost:
 		api.setConfig(ctx, w, r)
+	case http.MethodPatch:
+		api.updateConfig(ctx, w, r)
 	case http.MethodOptions:
-		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodPost}, w, r)
+		api.OptionsResponse([]string{http.MethodOptions, http.MethodGet, http.MethodPost, http.MethodPatch}, w, r)
 	default:
 		api.Respond(w, r, nil, apis.ErrMethodNotAllowed)
 	}
@@ -54,6 +56,27 @@ func (api *OpenBarAPI) setConfig(ctx context.Context, w http.ResponseWriter, r *
 		err = openbardb.SetConfig(ctx, tx, reqCfg)
 		if err != nil {
 			return fmt.Errorf("failed to set config in db: %w", err)
+		}
+
+		return tx.Commit()
+	})
+
+	api.Respond(w, r, nil, err)
+}
+
+func (api *OpenBarAPI) updateConfig(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	var config map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&config)
+	if err != nil {
+		api.Respond(w, r, nil, apis.ErrBadRequest)
+		return
+	}
+
+	err = api.Transaction(ctx, func(tx *dbr.Tx) error {
+		var err error
+		err = openbardb.UpdateConfig(ctx, tx, config)
+		if err != nil {
+			return fmt.Errorf("failed to update config in db: %w", err)
 		}
 
 		return tx.Commit()

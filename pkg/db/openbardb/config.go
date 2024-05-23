@@ -76,6 +76,21 @@ func SetConfig(ctx context.Context, tx *dbr.Tx, config map[string]string) error 
 	return numPumpsUpdated(ctx, tx, config[NumPumpsConfigKey])
 }
 
+func UpdateConfig(ctx context.Context, tx *dbr.Tx, config map[string]interface{}) error {
+	for k, v := range config {
+		_, err := tx.Update(configTable).Set("value", v).Where(dbr.Eq(keyCol, k)).ExecContext(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to update config: %w", err)
+		}
+	}
+
+	if _, ok := config[NumPumpsConfigKey]; ok {
+		return numPumpsUpdated(ctx, tx, config[NumPumpsConfigKey].(string))
+	}
+
+	return nil
+}
+
 func DeleteConfigValues(ctx context.Context, tx *dbr.Tx, keys ...string) error {
 	updatedReqKeys := make(map[string]string)
 	for i, key := range keys {

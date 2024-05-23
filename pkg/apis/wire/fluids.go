@@ -53,10 +53,17 @@ func FromDbFluids(fluids []openbardb.Fluid) Fluids {
 			continue
 		}
 
-		name := util.ReplaceChars(*fluid.Fluid, map[rune]rune{'_': ' ', '-': ' '})
-		f[fluid.Idx] = Fluid{
-			ID:   *fluid.Fluid,
-			Name: util.TitleCase(name),
+		if fluid.Fluid == nil {
+			f[fluid.Idx] = Fluid{
+				ID:   "empty",
+				Name: "Empty",
+			}
+		} else {
+			name := util.ReplaceChars(*fluid.Fluid, map[rune]rune{'_': ' ', '-': ' '})
+			f[fluid.Idx] = Fluid{
+				ID:   *fluid.Fluid,
+				Name: util.TitleCase(name),
+			}
 		}
 	}
 
