@@ -1,3 +1,5 @@
+//go:build !linux
+
 package hardware
 
 import (
@@ -40,4 +42,5 @@ func (rp *ReversePin) Value() int {
 	defer rp.mu.Unlock()
 
 	return rp.currentVal
+}
 }

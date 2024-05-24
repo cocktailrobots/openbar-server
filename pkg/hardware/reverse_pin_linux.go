@@ -1,6 +1,7 @@
 package hardware
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/warthog618/gpiod"
@@ -18,30 +19,34 @@ type ReversePin struct {
 }
 
 func NewReversePin(config *cfg.ReversePinConfig) (*ReversePin, error) {
-	if cfg == nil || config.Pin == -1 {
+	if config == nil || config.Pin == -1 {
 		return &ReversePin{
+			mu:         &sync.Mutex{},
 			pin:        -1,
 			forwardVal: 0,
 			backVal:    1,
 		}, nil
 	}
 
-	l, err := gpiod.RequestLine("gpiochip0", pin, gpiod.AsOutput(0))
+	l, err := gpiod.RequestLine("gpiochip0", config.Pin, gpiod.AsOutput(0))
 	if err != nil {
-		return nil, fmt.Errorf("error requesting line %d as output: %w", pin, err)
+		return nil, fmt.Errorf("error requesting line %d as output: %w", config.Pin, err)
 	}
 
-	var backVal int
-	if forwardVal == 0 {
-		backVal = 1
+	var forwardVal int
+	var backVal int = 1
+	if config.ForwardHigh {
+		backVal = 0
+		forwardVal = 1
 	}
 
 	return &ReversePin{
-		pin:        pin,
+		mu:         &sync.Mutex{},
+		pin:        config.Pin,
 		line:       l,
 		forwardVal: forwardVal,
 		backVal:    backVal,
-	}
+	}, nil
 }
 
 func (rp *ReversePin) SetDirection(direction PumpState) error {
@@ -65,3 +70,11 @@ func (rp *ReversePin) SetDirection(direction PumpState) error {
 	rp.currentVal = val
 	return nil
 }
+
+func (rp *ReversePin) Value() int {
+	rp.mu.Lock()
+	defer rp.mu.Unlock()
+
+	return rp.currentVal
+}
+

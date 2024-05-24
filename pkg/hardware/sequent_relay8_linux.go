@@ -69,6 +69,7 @@ type SequentRelay8Hardware struct {
 	boards         []relay8Board
 	runTimes       []time.Duration
 	stateChangedAt []time.Time
+	rp             *ReversePin
 }
 
 func NewSR8Hardware(expBoardCount int, rp *ReversePin) (*SequentRelay8Hardware, error) {
@@ -92,12 +93,15 @@ func NewSR8Hardware(expBoardCount int, rp *ReversePin) (*SequentRelay8Hardware, 
 		return nil, fmt.Errorf("%d relay8 boards found. %d expected", len(relay8s), expBoardCount)
 	}
 
-	return &SequentRelay8Hardware{
+	hw := &SequentRelay8Hardware{
 		mu:             &sync.Mutex{},
 		boards:         relay8s,
 		runTimes:       make([]time.Duration, len(relay8s)*8),
 		stateChangedAt: make([]time.Time, len(relay8s)*8),
-	}, nil
+		rp:             rp,
+	}
+
+	return hw, nil
 }
 
 func (s *SequentRelay8Hardware) Name() string {

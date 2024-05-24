@@ -241,7 +241,9 @@ func initHardware(ctx context.Context, config *cfg.Config, logger *zap.Logger) (
 }
 
 func connectToDB(ctx context.Context, database, branch string, config *cfg.Config, multiStatements bool) (*dbr.Connection, error) {
-	if config.DB.Host == nil || *config.DB.Host == "" {
+	if config.DB == nil {
+		return nil, fmt.Errorf("no config provided to connect to")
+	} else if config.DB.Host == nil || *config.DB.Host == "" {
 		return nil, fmt.Errorf("no database host specified")
 	} else if config.DB.User == nil || *config.DB.User == "" {
 		return nil, fmt.Errorf("no database user specified")
