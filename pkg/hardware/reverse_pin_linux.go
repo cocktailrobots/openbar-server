@@ -2,6 +2,7 @@ package hardware
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/warthog618/gpiod"
@@ -28,7 +29,7 @@ func NewReversePin(config *cfg.ReversePinConfig) (*ReversePin, error) {
 		}, nil
 	}
 
-	l, err := gpiod.RequestLine("gpiochip0", config.Pin, gpiod.AsOutput(0))
+	l, err := gpiod.RequestLine("gpiochip0", config.Pin, gpiod.AsOutput(1))
 	if err != nil {
 		return nil, fmt.Errorf("error requesting line %d as output: %w", config.Pin, err)
 	}
@@ -61,6 +62,7 @@ func (rp *ReversePin) SetDirection(direction PumpState) error {
 	}
 
 	if rp.line != nil && val != rp.currentVal {
+		log.Printf("setting pin %d to %d", rp.pin, val)
 		err := rp.line.SetValue(val)
 		if err != nil {
 			return fmt.Errorf("error setting value %d on line %d: %w", val, rp.pin, err)

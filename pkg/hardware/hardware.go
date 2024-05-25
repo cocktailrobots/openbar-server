@@ -188,7 +188,6 @@ func startAsyncHWRoutine(hw Hardware) chan asyncPumpTimes {
 			now := time.Now()
 			for i, t := range latestOffTimes {
 				newState := latestDirection
-				hw.GetReversePin().SetDirection(newState)
 
 				if t.Before(now) {
 					newState = Off
@@ -201,8 +200,6 @@ func startAsyncHWRoutine(hw Hardware) chan asyncPumpTimes {
 					currentState[i] = newState
 				}
 			}
-
-			//hw.Update()
 		}
 	}()
 
