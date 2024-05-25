@@ -43,4 +43,3 @@ func (rp *ReversePin) Value() int {
 
 	return rp.currentVal
 }
-}

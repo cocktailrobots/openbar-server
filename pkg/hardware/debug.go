@@ -191,11 +191,11 @@ func (h *DebugHardware) TimeRun(idx int) time.Duration {
 }
 
 // RunForTimes runs the pumps for the given times
-func (h *DebugHardware) RunForTimes(times []time.Duration) error {
+func (h *DebugHardware) RunForTimes(direction PumpState, times []time.Duration) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	return runForTimes(h, times)
+	return runForTimes(h, direction, times)
 }
 
 // GetReversePin gets the reverse Pin object

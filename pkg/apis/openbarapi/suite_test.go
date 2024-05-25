@@ -22,7 +22,9 @@ func TestOpenBarApiPackage(t *testing.T) {
 	require.NoError(t, err)
 
 	dbSuite := test.NewDBSuite("openbardb", "test", "../../../schema/openbardb/", "")
-	hw := hardware.NewTestHardware(8)
+	rp, err := hardware.NewReversePin(nil)
+	require.NoError(t, err)
+	hw := hardware.NewTestHardware(8, rp)
 	api := New(logger, dbSuite, mux.NewRouter(), hw)
 	suite.Run(t, &testSuite{
 		DBSuite: dbSuite,

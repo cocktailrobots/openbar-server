@@ -88,11 +88,11 @@ func (thw *TestHardware) TimeRun(idx int) time.Duration {
 	return thw.runTimes[idx]
 }
 
-func (thw *TestHardware) RunForTimes(times []time.Duration) error {
+func (thw *TestHardware) RunForTimes(direction PumpState, times []time.Duration) error {
 	thw.mu.Lock()
 	defer thw.mu.Unlock()
 
-	return runForTimes(thw, times)
+	return runForTimes(thw, direction, times)
 }
 
 func (thw *TestHardware) GetReversePin() *ReversePin {

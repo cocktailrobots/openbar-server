@@ -57,7 +57,7 @@ type Hardware interface {
 	TimeRun(idx int) time.Duration
 
 	// RunForTimes runs the pumps for the given times
-	RunForTimes(times []time.Duration) error
+	RunForTimes(direction PumpState, times []time.Duration) error
 
 	// GetReversePin gets the reverse Pin object
 	GetReversePin() *ReversePin
@@ -74,7 +74,7 @@ func TurnPumpsOff(h Hardware) error {
 	return nil
 }
 
-func runForTimes(hw Hardware, times []time.Duration) error {
+func runForTimes(hw Hardware, direction PumpState, times []time.Duration) error {
 	numPumps := hw.NumPumps()
 	if len(times) != numPumps {
 		return fmt.Errorf("expected %d times, but got %d", numPumps, len(times))
@@ -96,14 +96,14 @@ func runForTimes(hw Hardware, times []time.Duration) error {
 		hw.update()
 	}()
 
-	hw.GetReversePin().SetDirection(Forward)
+	hw.GetReversePin().SetDirection(direction)
 
 	start := time.Now()
 	onCount := 0
 	running := make([]bool, numPumps)
 	for i := 0; i < numPumps; i++ {
 		if times[i] > 0 {
-			if err := hw.pump(i, Forward); err != nil {
+			if err := hw.pump(i, direction); err != nil {
 				return fmt.Errorf("error turning pump %d on: %w", i, err)
 			}
 

@@ -41,7 +41,7 @@ func (s *GpioHardware) TimeRun(idx int) time.Duration {
 	return 0
 }
 
-func (s *GpioHardware) RunForTimes(times []time.Duration) error {
+func (s *GpioHardware) RunForTimes(direction PumpState, times []time.Duration) error {
 	return nil
 }
 

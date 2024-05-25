@@ -55,7 +55,7 @@ func (api *OpenBarAPI) setButtonState(ctx context.Context, w http.ResponseWriter
 	if req.Async {
 		err = api.ashwr.RunPumps(direction, runTimes)
 	} else {
-		err = api.hw.RunForTimes(runTimes)
+		err = api.hw.RunForTimes(direction, runTimes)
 	}
 
 	api.Respond(w, r, nil, err)

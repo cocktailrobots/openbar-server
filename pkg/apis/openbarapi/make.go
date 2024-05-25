@@ -6,6 +6,7 @@ import (
 	"github.com/cocktailrobots/openbar-server/pkg/apis"
 	"github.com/cocktailrobots/openbar-server/pkg/apis/wire"
 	"github.com/cocktailrobots/openbar-server/pkg/db/openbardb"
+	"github.com/cocktailrobots/openbar-server/pkg/hardware"
 	"github.com/gocraft/dbr/v2"
 	"net/http"
 	"time"
@@ -69,7 +70,7 @@ func (api *OpenBarAPI) MakeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.hw.RunForTimes(timesForPumps)
+	err = api.hw.RunForTimes(hardware.Forward, timesForPumps)
 	api.Respond(w, r, nil, err)
 }
 

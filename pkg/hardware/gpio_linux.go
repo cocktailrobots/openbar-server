@@ -139,11 +139,11 @@ func (g *GpioHardware) TimeRun(idx int) time.Duration {
 	return g.runTimes[idx]
 }
 
-func (g *GpioHardware) RunForTimes(times []time.Duration) error {
+func (g *GpioHardware) RunForTimes(direction PumpState, times []time.Duration) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	return runForTimes(g, times)
+	return runForTimes(g, direction, times)
 }
 
 func (g *GpioHardware) GetReversePin() *ReversePin {

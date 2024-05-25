@@ -37,7 +37,7 @@ func (s *SequentRelay8Hardware) TimeRun(idx int) time.Duration {
 	return 0
 }
 
-func (s *SequentRelay8Hardware) RunForTimes(times []time.Duration) error {
+func (s *SequentRelay8Hardware) RunForTimes(direction PumpState, times []time.Duration) error {
 	return nil
 }
 

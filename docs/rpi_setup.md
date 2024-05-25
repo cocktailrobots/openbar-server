@@ -129,6 +129,11 @@ Modify the ~/.bashrc file using vi or whatever editor you like. Add the followin
 
 `sudo apt install git -y`
 
+```
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+```
+
 #### Additional packages
 
 `sudo apt install libncurses5-dev -y`
@@ -196,6 +201,9 @@ hardware:
     pins: [...]
   sequent:
     expected-board-count: 1
+reverse-pin:
+  pin: 4
+  forwand-high: true
 buttons:
   gpio:
     pins: [...]
@@ -251,14 +259,30 @@ To enable I2C:
 git clone https://github.com/cocktailrobots/openbar-client.git
 cd openbar-client
 npm install
+npm install -g serve
+npx update-browserslist-db@latest
+```
+
+Create a `.env` file in the root of the openbar-client directory with the following structure:
+
+```
+REACT_APP_OPENBAR_API_HOST_DEV=127.0.0.1:3099
+REACT_APP_COCKTAILS_API_HOST_DEV=127.0.0.1:8675
+
+REACT_APP_OPENBAR_API_HOST_PROD=192.168.42.42:3099
+REACT_APP_COCKTAILS_API_HOST_PROD=192.168.42.42:8675
+
+PORT=80```
+
+```
+
 npm run build
 sudo mkdir /etc/openbar-client
-mv build/* /etc/openbar-client/
+sudo mv build/* /etc/openbar-client/
+sudo vi /etc/systemd/system/openbar-client.service
+```
 
-
-
-
-
+```
 ## Enabling Android USB Tethering
 
 Add to `/etc/dhcpcd.conf`

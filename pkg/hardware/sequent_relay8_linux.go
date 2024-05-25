@@ -183,11 +183,11 @@ func (s *SequentRelay8Hardware) TimeRun(idx int) time.Duration {
 	return s.runTimes[idx]
 }
 
-func (s *SequentRelay8Hardware) RunForTimes(times []time.Duration) error {
+func (s *SequentRelay8Hardware) RunForTimes(direction PumpState, times []time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return runForTimes(s, times)
+	return runForTimes(s, direction, times)
 }
 
 func (s *SequentRelay8Hardware) GetReversePin() *ReversePin {
