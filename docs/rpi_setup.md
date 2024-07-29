@@ -17,14 +17,19 @@ insert it into the Raspberry Pi and power it on. Use the SSH key or username/pas
 ## Prerequisites
 
 ```
-sudo apt upgrade
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+sudo bash
+cd /root
+apt update
+apt upgrade
+apt install vim netcat-traditional python3-pip libncurses5-dev mariadb-client python3-pip python3-twisted git -y
+curl -o https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+exit
+```
+
+```
+sudo bash
+cd /root
 nvm install v18.18.0
-sudo apt install git -y
-sudo apt install libncurses5-dev -y
-sudo apt install mariadb-client -y
-sudo apt install python3-pip -y
-sudo pip install twisted
 ```
 
 ## Dolt Installation and Setup
@@ -37,7 +42,7 @@ sudo pip install twisted
 ### Clone your fork of the Cocktails Repo
 
 ```bash
-openbar@openbar:~ $ sudo bas
+openbar@openbar:~ $ sudo bash
 root@openbar:/home/username# cd /var
 root@openbar:/var# mkdir dbs
 root@openbar:/var# cd dbs
@@ -161,14 +166,14 @@ $ openbar-server
 sudo bash
 mkdir /etc/openbar-server
 cd /etc/openbar-server
-vi config.yaml
-vi /etc/systemd/system/openbar-server.service
+vim config.yaml
+vim /etc/systemd/system/openbar-server.service
 ```
 
 ```
 [Unit]
-Description=dolt service
-After=network.target
+Description=openbar server
+After=dolt.service
 
 [Service]
 Type=simple
@@ -178,17 +183,17 @@ AmbientCapabilities=CAP_NET_BIND_SERVICE
 
 Environment=DOLT_ROOT_PATH=/var/dbs/
 WorkingDirectory=/etc/openbar-server
-execStart=/home/openbar/go/bin/openbar-server config.yaml
+ExecStart=/home/openbar/go/bin/openbar-server config.yaml
 
 LimitNOFILE=100000
 
 Restart=always
-RestartSec=1
+RestartSec=5
 
 MemoryAccounting=true
 MemoryMax=90%
 
-[Install
+[Install]
 WantedBy=multi-user.target
 ```
 
@@ -249,18 +254,21 @@ To enable I2C:
 ~$ git clone https://github.com/SequentMicrosystems/8relind-rpi.git
 ~$ cd 8relind-rpi/
 ~/8relind-rpi$ sudo make install
-~/8relind-rpi$ 8
+~/8relind-rpi$ 8relind 0 test
 ```
-
-
 
 ## Openbar-client
 
-git clone https://github.com/cocktailrobots/openbar-client.git
-cd openbar-client
+`~$ git clone git@github.com:cocktailrobots/openbar-client.git`
+`git clone https://github.com/cocktailrobots/openbar-client.git`
+
+```
+cd ~/openbar-client
+sudo bash
 npm install
 npm install -g serve
 npx update-browserslist-db@latest
+exit
 ```
 
 Create a `.env` file in the root of the openbar-client directory with the following structure:
@@ -269,35 +277,58 @@ Create a `.env` file in the root of the openbar-client directory with the follow
 REACT_APP_OPENBAR_API_HOST_DEV=127.0.0.1:3099
 REACT_APP_COCKTAILS_API_HOST_DEV=127.0.0.1:8675
 
-REACT_APP_OPENBAR_API_HOST_PROD=192.168.42.42:3099
-REACT_APP_COCKTAILS_API_HOST_PROD=192.168.42.42:8675
+REACT_APP_OPENBAR_API_HOST_PROD=10.42.0.1:3099
+REACT_APP_COCKTAILS_API_HOST_PROD=10.42.0.1:8675
 
-PORT=80```
-
+PORT=80
 ```
 
+```
+cd ~/openbar-client
+sudo bash
 npm run build
-sudo mkdir /etc/openbar-client
-sudo mv build/* /etc/openbar-client/
-sudo vi /etc/systemd/system/openbar-client.service
+mkdir /etc/openbar-client
+mv build/* /etc/openbar-client/
+vim /etc/systemd/system/openbar-client.service
 ```
 
 ```
-## Enabling Android USB Tethering
+[Unit]
+Description=openbar client service
+After=network.target
 
-Add to `/etc/dhcpcd.conf`
+[Service]
+Type=simple
+User=root
+Group=root
+
+WorkingDirectory=/etc/openbar-client
+Environment="PATH=/root/.nvm/versions/node/v18.18.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/root/.nvm/versions/node/v18.18.0/bin/serve /etc/openbar-client
+
+LimitNOFILE=100000
+
+Restart=always
+RestartSec=1
+
+MemoryAccounting=true
+MemoryMax=90%
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ```
-interface usb0
-static ip_address=192.168.42.42/24
-static routers=192.168.42.129
-static domain_name_servers=192.168.42.129
+export WIFI_SSID='openbar-net-'$(uuid|cut -d '-' -f 1)
+export WIFI_PASS='password1234'
+
+nmcli con add type wifi ifname wlan0 con-name Hotspot autoconnect yes ssid "$WIFI_SSID"
+nmcli con modify Hotspot 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
+nmcli con modify Hotspot wifi-sec.key-mgmt wpa-psk
+nmcli con modify Hotspot wifi-sec.psk "$WIFI_PASS"
+
+export CNX_UUID=$(nmcli connection show |grep -i hotspot | tr -s ' ' | cut -d ' ' -f 2)
+apt purge openresolv dhcpcd5
+nmcli con up uuid $CNX_UUID
 ```
-
-Restart dhcpcd
-
-`sudo systemctl restart dhcpcd`
-
-Open Android Settings -> Network & Internet -> Hotspot & tethering and enable USB tethering.
-
 
