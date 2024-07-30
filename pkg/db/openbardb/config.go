@@ -12,7 +12,8 @@ const (
 	configTable = "config"
 	keyCol      = "key"
 
-	NumPumpsConfigKey = "num_pumps"
+	NumPumpsConfigKey   = "num_pumps"
+	DefaultVolConfigKey = "default_volume_ml"
 )
 
 type RequiredKey struct {
@@ -21,7 +22,8 @@ type RequiredKey struct {
 }
 
 var requiredKeys = map[string]string{
-	NumPumpsConfigKey: "0",
+	NumPumpsConfigKey:   "0",
+	DefaultVolConfigKey: "133",
 }
 
 func GetConfig(ctx context.Context, tx *dbr.Tx) (map[string]string, error) {

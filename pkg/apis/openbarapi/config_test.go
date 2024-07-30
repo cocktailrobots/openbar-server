@@ -11,7 +11,7 @@ import (
 )
 
 func (s *testSuite) TestConfig() {
-	cfg := wire.Config{openbardb.NumPumpsConfigKey: "0"}
+	cfg := wire.Config{openbardb.NumPumpsConfigKey: "0", openbardb.DefaultVolConfigKey: "133"}
 	getCfgAndTest(s, cfg)
 	testPumpsAndFluids(s, 0)
 
@@ -27,7 +27,8 @@ func (s *testSuite) TestConfig() {
 		"three": "3",
 	}
 	setConfig(s, cfg)
-	cfg[openbardb.NumPumpsConfigKey] = "0" // Required key
+	cfg[openbardb.NumPumpsConfigKey] = "0"     // Required key
+	cfg[openbardb.DefaultVolConfigKey] = "133" // Required key
 	getCfgAndTest(s, cfg)
 
 	// Test patching a single value
@@ -112,14 +113,14 @@ func (s *testSuite) TestConfig() {
 	updateNumPumpsConfigKey(s, 6)
 	updateNumPumpsConfigKey(s, 10)
 
-	expected = wire.Config{openbardb.NumPumpsConfigKey: "0"}
+	expected = wire.Config{openbardb.NumPumpsConfigKey: "0", openbardb.DefaultVolConfigKey: "133"}
 	setConfig(s, wire.Config{})
 	getCfgAndTest(s, expected)
 	testPumpsAndFluids(s, 0)
 }
 
 func updateNumPumpsConfigKey(s *testSuite, numPumps int) {
-	cfg := map[string]string{openbardb.NumPumpsConfigKey: strconv.FormatInt(int64(numPumps), 10)}
+	cfg := map[string]string{openbardb.NumPumpsConfigKey: strconv.FormatInt(int64(numPumps), 10), openbardb.DefaultVolConfigKey: "133"}
 
 	req, err := http.NewRequest(http.MethodPost, "/config", test.JsonReaderForObject(cfg))
 	s.Require().NoError(err)

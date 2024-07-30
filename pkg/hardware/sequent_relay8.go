@@ -7,7 +7,8 @@ import (
 )
 
 type SequentRelay8Hardware struct {
-	rp *ReversePin
+	rp           *ReversePin
+	relayMapping []int
 }
 
 func (s *SequentRelay8Hardware) Name() string {
@@ -45,8 +46,9 @@ func (s *SequentRelay8Hardware) GetReversePin() *ReversePin {
 	return s.rp
 }
 
-func NewSR8Hardware(expBoardCount int, rp *ReversePin) (*SequentRelay8Hardware, error) {
+func NewSR8Hardware(expBoardCount int, relayMapping []int, rp *ReversePin) (*SequentRelay8Hardware, error) {
 	return &SequentRelay8Hardware{
-		rp: rp,
+		rp:           rp,
+		relayMapping: relayMapping,
 	}, nil
 }

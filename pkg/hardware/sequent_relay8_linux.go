@@ -70,9 +70,10 @@ type SequentRelay8Hardware struct {
 	runTimes       []time.Duration
 	stateChangedAt []time.Time
 	rp             *ReversePin
+	relayMapping   []int
 }
 
-func NewSR8Hardware(expBoardCount int, rp *ReversePin) (*SequentRelay8Hardware, error) {
+func NewSR8Hardware(expBoardCount int, relayMapping []int, rp *ReversePin) (*SequentRelay8Hardware, error) {
 	var relay8s []relay8Board
 	for i := byte(0); i < 8; i++ {
 		dev, err := sequent.InitBoard(i)
@@ -135,19 +136,21 @@ func (s *SequentRelay8Hardware) pump(idx int, state PumpState) error {
 		return fmt.Errorf("invalid pump index %d", idx)
 	}
 
-	boardIdx := idx / 8
-	pumpIdx := idx % 8
+	relayIdx := s.relayMapping[idx]
 
-	currOn := bool(s.boards[boardIdx].state.Get(pumpIdx))
+	boardIdx := relayIdx / 8
+	boardRelayIdx := relayIdx % 8
+
+	currOn := bool(s.boards[boardIdx].state.Get(boardRelayIdx))
 	newOn := state != Off
 
 	if currOn != newOn {
 		now := time.Now()
-		s.runTimes[idx] += now.Sub(s.stateChangedAt[idx])
-		s.stateChangedAt[idx] = now
+		s.runTimes[relayIdx] += now.Sub(s.stateChangedAt[relayIdx])
+		s.stateChangedAt[relayIdx] = now
 	}
 
-	s.boards[boardIdx].state = s.boards[boardIdx].state.Set(pumpIdx, state != Off)
+	s.boards[boardIdx].state = s.boards[boardIdx].state.Set(boardRelayIdx, state != Off)
 
 	return nil
 }
@@ -180,7 +183,9 @@ func (s *SequentRelay8Hardware) TimeRun(idx int) time.Duration {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.runTimes[idx]
+	relayIdx := s.relayMapping[idx]
+
+	return s.runTimes[relayIdx]
 }
 
 func (s *SequentRelay8Hardware) RunForTimes(direction PumpState, times []time.Duration) error {

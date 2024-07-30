@@ -10,7 +10,8 @@ func (s *testSuite) TestConfig() {
 	config, err := GetConfig(ctx, tx)
 	s.Require().NoError(err)
 	s.Require().Equal(map[string]string{
-		NumPumpsConfigKey: "0",
+		NumPumpsConfigKey:   "0",
+		DefaultVolConfigKey: "133",
 	}, config)
 
 	err = SetConfig(ctx, tx, map[string]string{
@@ -21,8 +22,9 @@ func (s *testSuite) TestConfig() {
 	config, err = GetConfig(ctx, tx)
 	s.Require().NoError(err)
 	s.Require().Equal(map[string]string{
-		NumPumpsConfigKey: "0",
-		"test":            "test",
+		NumPumpsConfigKey:   "0",
+		"test":              "test",
+		DefaultVolConfigKey: "133",
 	}, config)
 
 	err = SetConfig(ctx, tx, map[string]string{
@@ -32,7 +34,8 @@ func (s *testSuite) TestConfig() {
 	config, err = GetConfig(ctx, tx)
 	s.Require().NoError(err)
 	s.Require().Equal(map[string]string{
-		NumPumpsConfigKey: "1",
+		NumPumpsConfigKey:   "1",
+		DefaultVolConfigKey: "133",
 	}, config)
 
 	err = DeleteConfigValues(ctx, tx, NumPumpsConfigKey)
@@ -41,7 +44,8 @@ func (s *testSuite) TestConfig() {
 	config, err = GetConfig(ctx, tx)
 	s.Require().NoError(err)
 	s.Require().Equal(map[string]string{
-		NumPumpsConfigKey: "0",
+		NumPumpsConfigKey:   "0",
+		DefaultVolConfigKey: "133",
 	}, config)
 
 	err = SetConfig(ctx, tx, map[string]string{
@@ -53,9 +57,10 @@ func (s *testSuite) TestConfig() {
 	config, err = GetConfig(ctx, tx)
 	s.Require().NoError(err)
 	s.Require().Equal(map[string]string{
-		NumPumpsConfigKey: "1",
-		"foo":             "bar",
-		"baz":             "qux",
+		NumPumpsConfigKey:   "1",
+		DefaultVolConfigKey: "133",
+		"foo":               "bar",
+		"baz":               "qux",
 	}, config)
 
 	err = DeleteConfigValues(ctx, tx, NumPumpsConfigKey, "foo")
@@ -64,8 +69,9 @@ func (s *testSuite) TestConfig() {
 	config, err = GetConfig(ctx, tx)
 	s.Require().NoError(err)
 	s.Require().Equal(map[string]string{
-		NumPumpsConfigKey: "0",
-		"baz":             "qux",
+		NumPumpsConfigKey:   "0",
+		DefaultVolConfigKey: "133",
+		"baz":               "qux",
 	}, config)
 
 }

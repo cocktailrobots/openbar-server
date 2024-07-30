@@ -225,7 +225,19 @@ func initHardware(ctx context.Context, config *cfg.Config, logger *zap.Logger) (
 		case config.Hardware.Sequent != nil:
 			logger.Info("Creating sequent hardware")
 			sequentConfig := config.Hardware.Sequent
-			hw, err = hardware.NewSR8Hardware(sequentConfig.ExpectedBoardCount, rp)
+			mappingSize := sequentConfig.ExpectedBoardCount * 8
+			if sequentConfig.RelayMapping == nil {
+				sequentConfig.RelayMapping = make([]int, mappingSize)
+				for i := 0; i < mappingSize; i++ {
+					sequentConfig.RelayMapping[i] = i
+				}
+			} else {
+				if len(sequentConfig.RelayMapping) != mappingSize {
+					return nil, fmt.Errorf("relay mapping size (%d) does not match expected board count * 8 (%d * 8)", len(sequentConfig.RelayMapping), sequentConfig.ExpectedBoardCount)
+				}
+			}
+
+			hw, err = hardware.NewSR8Hardware(sequentConfig.ExpectedBoardCount, sequentConfig.RelayMapping, rp)
 			if err != nil {
 				return nil, fmt.Errorf("error creating sequent hardware: %w", err)
 			}

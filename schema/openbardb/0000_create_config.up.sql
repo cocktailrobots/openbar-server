@@ -6,7 +6,7 @@ CREATE TABLE config (
     `value` varchar(255) NOT NULL
 );
 
-INSERT INTO config VALUES ('num_pumps', '0');
+INSERT INTO config VALUES ('num_pumps', '0'), ('default_volume_ml', '133');
 
 call dolt_add('.');
 call dolt_commit('-m', 'Post-migration 0000_create_config.up.sql');

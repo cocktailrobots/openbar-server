@@ -130,18 +130,12 @@ Untar the downloaded file
 Modify the ~/.bashrc file using vi or whatever editor you like. Add the following line to the end of the file. This will add the go binary to the PATH variable
 `PATH=$PATH:/usr/local/go/bin:~/go/bin`
 
-#### Install git
-
-`sudo apt install git -y`
+#### Configure git
 
 ```
   git config --global user.email "you@example.com"
   git config --global user.name "Your Name"
 ```
-
-#### Additional packages
-
-`sudo apt install libncurses5-dev -y`
 
 #### Clone the openbar-server repo and install
 ```
