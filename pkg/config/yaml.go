@@ -23,7 +23,7 @@ type GpioHardwareConfig struct {
 
 type SequentHardwareConfig struct {
 	ExpectedBoardCount int   `yaml:"expected-board-count"`
-	RelayMapping       []int `yaml:relay-mapping`
+	RelayMapping       []int `yaml:"relay-mapping"`
 }
 
 type HardwareConfig struct {

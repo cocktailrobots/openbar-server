@@ -100,6 +100,7 @@ func NewSR8Hardware(expBoardCount int, relayMapping []int, rp *ReversePin) (*Seq
 		runTimes:       make([]time.Duration, len(relay8s)*8),
 		stateChangedAt: make([]time.Time, len(relay8s)*8),
 		rp:             rp,
+		relayMapping:   relayMapping,
 	}
 
 	return hw, nil

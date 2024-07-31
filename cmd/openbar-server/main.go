@@ -223,7 +223,7 @@ func initHardware(ctx context.Context, config *cfg.Config, logger *zap.Logger) (
 			}
 
 		case config.Hardware.Sequent != nil:
-			logger.Info("Creating sequent hardware")
+			logger.Info("Creating sequent hardware", zap.Any("sequent", config.Hardware.Sequent))
 			sequentConfig := config.Hardware.Sequent
 			mappingSize := sequentConfig.ExpectedBoardCount * 8
 			if sequentConfig.RelayMapping == nil {
@@ -237,6 +237,7 @@ func initHardware(ctx context.Context, config *cfg.Config, logger *zap.Logger) (
 				}
 			}
 
+			logger.Info("Updated relay mapping", zap.Any("relay_mapping", sequentConfig.RelayMapping))
 			hw, err = hardware.NewSR8Hardware(sequentConfig.ExpectedBoardCount, sequentConfig.RelayMapping, rp)
 			if err != nil {
 				return nil, fmt.Errorf("error creating sequent hardware: %w", err)
