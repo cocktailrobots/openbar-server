@@ -31,6 +31,8 @@ func New(logger *zap.Logger, txp dbutils.TxProvider, rtr *mux.Router, hw hardwar
 	rtr.HandleFunc("/menus/{name}/recipes/{id}", api.MenuRecipeHandler)
 	rtr.HandleFunc("/make", api.MakeHandler)
 	rtr.HandleFunc("/buttons", api.ButtonsHandler)
+	rtr.HandleFunc("/networking", api.NetworkingHandler)
+	rtr.HandleFunc("/shutdown", api.ShutdownHandler)
 
 	return api
 }

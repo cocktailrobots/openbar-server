@@ -8,6 +8,8 @@ import (
 
 const (
 	PumpsTable = "pumps"
+
+	mlPerSecCol = "ml_per_sec"
 )
 
 type Pump struct {

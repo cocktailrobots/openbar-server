@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	pumpsTable  = "pumps"
 	configTable = "config"
 	keyCol      = "key"
 
-	NumPumpsConfigKey   = "num_pumps"
-	DefaultVolConfigKey = "default_volume_ml"
+	NumPumpsConfigKey    = "num_pumps"
+	DefaultVolConfigKey  = "default_volume_ml"
+	CurrentMenuConfigKey = "current_menu"
 )
 
 type RequiredKey struct {
@@ -133,7 +133,7 @@ func numPumpsUpdated(ctx context.Context, tx *dbr.Tx, numPumpsStr string) error 
 		return fmt.Errorf("numPumps must be >= 0")
 	}
 
-	_, err = tx.DeleteFrom(pumpsTable).Where(dbr.Gte(idxCol, numPumps)).ExecContext(ctx)
+	_, err = tx.DeleteFrom(PumpsTable).Where(dbr.Gte(idxCol, numPumps)).ExecContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -144,9 +144,9 @@ func numPumpsUpdated(ctx context.Context, tx *dbr.Tx, numPumpsStr string) error 
 	}
 
 	if numPumps > 0 {
-		ins := tx.InsertInto(pumpsTable).Ignore().Columns(idxCol)
-		for i := int64(0); i < numPumps; i++ {
-			ins = ins.Values(i)
+		ins := tx.InsertInto(PumpsTable).Ignore().Columns(idxCol, mlPerSecCol)
+		for i := 0; i < int(numPumps); i++ {
+			ins = ins.Record(&Pump{Idx: i, MlPerSec: 1.0})
 		}
 
 		_, err = ins.ExecContext(ctx)
