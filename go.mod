@@ -1,19 +1,19 @@
 module github.com/cocktailrobots/openbar-server
 
-go 1.19
+go 1.22.0
+
+toolchain go1.22.6
 
 require (
 	github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc
 	github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22
 	github.com/dolthub/driver v0.0.0-20230817202733-930d981c0c45
-	github.com/gar-r/wifi-name v0.3.0
 	github.com/gbin/goncurses v0.0.0-20141106211150-34d9399fcea5
 	github.com/go-sql-driver/mysql v1.7.2-0.20230713085235-0b18dac46f7f
 	github.com/gocraft/dbr/v2 v2.7.5
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
-	github.com/mdlayher/wifi v0.2.0
 	github.com/otiai10/copy v1.12.0
 	github.com/stretchr/testify v1.9.0
 	github.com/warthog618/gpiod v0.8.2
@@ -73,7 +73,6 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/josharian/native v1.1.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/juju/gnuflag v1.0.0 // indirect
 	github.com/kch42/buzhash v0.0.0-20160816060738-9bdec3dec7c6 // indirect
@@ -84,9 +83,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/mdlayher/genetlink v1.3.2 // indirect
-	github.com/mdlayher/netlink v1.7.2 // indirect
-	github.com/mdlayher/socket v0.4.1 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/mitchellh/hashstructure v1.1.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
