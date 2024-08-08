@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"strings"
+
 	"github.com/cocktailrobots/openbar-server/pkg/util/dbutils"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gocraft/dbr/v2"
 	"go.uber.org/zap"
-	"net/http"
-	"strings"
 )
 
 var ErrMethodNotAllowed = errors.New("method not allowed")
@@ -36,6 +37,7 @@ func (api *API) Logger() *zap.Logger {
 }
 
 func (api *API) Handle(w http.ResponseWriter, r *http.Request) {
+	api.logger.Info("handling request", zap.String("url", r.URL.String()), zap.String("method", r.Method))
 	api.handler.ServeHTTP(w, r)
 }
 
@@ -48,6 +50,8 @@ func (api *API) DefaultHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *API) OptionsResponse(allowedMethods []string, w http.ResponseWriter, r *http.Request) {
+	api.logger.Info("Responding to "+r.URL.Path, zap.String("url", r.URL.String()), zap.String("method", r.Method))
+
 	w.Header().Set("Allow", strings.Join(allowedMethods, ", "))
 	w.Header().Set("Access-Control-Allow-Methods", strings.Join(allowedMethods, ", "))
 	w.Header().Set("Access-Control-Allow-Headers", "content-type")
@@ -56,6 +60,8 @@ func (api *API) OptionsResponse(allowedMethods []string, w http.ResponseWriter, 
 }
 
 func (api *API) Respond(w http.ResponseWriter, r *http.Request, respObj any, err error) {
+	api.logger.Info("Responding to "+r.URL.Path, zap.String("url", r.URL.String()), zap.String("method", r.Method), zap.Error(err))
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 

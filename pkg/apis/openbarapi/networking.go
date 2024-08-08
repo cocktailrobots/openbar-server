@@ -29,7 +29,7 @@ func (api *OpenBarAPI) getNetworking(ctx context.Context, w http.ResponseWriter,
 	const wiredInterface = "eth0"
 
 	// this is all best effort. Log, but ignore errors.
-	ssid, err := networking.SSIDForInterface(wifiInterface)
+	ssid, err := networking.SSIDForHotspot()
 	if err != nil {
 		api.Logger().Info("Failed to get wifi SSID", zap.String("interface", wifiInterface), zap.Error(err))
 	}

@@ -282,7 +282,7 @@ cd ~/openbar-client
 sudo bash
 npm run build
 mkdir /etc/openbar-client
-mv build/* /etc/openbar-client/
+cp -r build/* /etc/openbar-client/
 vim /etc/systemd/system/openbar-client.service
 ```
 

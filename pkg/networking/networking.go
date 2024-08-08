@@ -2,35 +2,47 @@ package networking
 
 import (
 	"fmt"
+	"io"
 	"net"
-
-	wifiname "github.com/gar-r/wifi-name"
+	"os/exec"
+	"strings"
 )
 
 var ErrInterfaceNotFound = fmt.Errorf("not found")
 
-func SSIDForInterface(name string) (string, error) {
-	has, err := hasInterface(name)
-	if err == nil && !has {
-		return "", fmt.Errorf("interface '%s' : %w", name, ErrInterfaceNotFound)
+func SSIDForHotspot() (string, error) {
+	cmd := exec.Command("nmcli", "con", "show", "Hotspot")
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return "", fmt.Errorf("failed to create stdout pipe: %w", err)
 	}
 
-	return wifiname.GetSSID(name)
+	err = cmd.Start()
+	if err != nil {
+		return "", fmt.Errorf("failed to run nmcli: %w", err)
+	}
+
+	data, err := io.ReadAll(stdout)
+	if err != nil {
+		return "", fmt.Errorf("failed to read nmcli output: %w", err)
+	}
+
+	return processNmcliOutput(string(data))
 }
 
-func hasInterface(name string) (bool, error) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return false, fmt.Errorf("failed to get interfaces: %w", err)
-	}
-
-	for _, i := range ifaces {
-		if i.Name == name {
-			return true, nil
+func processNmcliOutput(data string) (string, error) {
+	lines := strings.Split(data, "\n")
+	for _, line := range lines {
+		tokens := strings.Split(line, ":")
+		if len(tokens) == 2 {
+			key := strings.ToLower(strings.TrimSpace(tokens[0]))
+			if key == "802-11-wireless.ssid" {
+				return strings.TrimSpace(tokens[1]), nil
+			}
 		}
 	}
 
-	return false, nil
+	return "", fmt.Errorf("failed to find SSID in nmcli output")
 }
 
 func AddrForInterface(name string) (string, error) {
